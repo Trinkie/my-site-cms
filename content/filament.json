@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "id": "1",
+      "material": "ABS+",
+      "color": "Черный",
+      "brand": "eSUN",
+      "image": "/assets/uploads/abs-black.jpg",
+      "in_stock": true,
+      "specs": [
+        {
+          "n": 1,
+          "name": "Диаметр",
+          "value": "1.75 мм"
+        },
+        {
+          "n": 2,
+          "name": "Температура сопла",
+          "value": "240–260°C"
+        },
+        {
+          "n": 3,
+          "name": "Температура стола",
+          "value": "100–110°C"
+        }
+      ]
+    },
+    {
+      "id": "abs_red_esun",
+      "material": "ABS+",
+      "color": "Красный",
+      "brand": "eSUN",
+      "image": "/assets/uploads/abs-signal-red.webp",
+      "in_stock": true,
+      "specs": [
+        {
+          "n": 1,
+          "name": "Диаметр",
+          "value": "1.75 мм"
+        },
+        {
+          "n": 2,
+          "name": "Температура сопла",
+          "value": "230–250°C"
+        }
+      ]
+    }
+  ]
+}
