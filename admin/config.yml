@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: https://github.com/Trinkie/my-site-cms    # ← замени!
+  repo: Trinkie/my-site-cms    # ← замени!
   branch: main
   auth_type: implicit
   client_id: Ov23liZ5R135pDHlQy5x      # ← вставь из п.1
@@ -24,3 +24,4 @@ collections:
             fields:
               - {label: "Название", name: "title", widget: "string"}
               - {label: "Цена", name: "price", widget: "number"}
+
