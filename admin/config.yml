@@ -1,10 +1,19 @@
+# admin/config.yml
+
+# Use DecapBridge auth (required for non-Netlify hosting)
 backend:
-  name: github
-  repo: Trinkie/my-site-cms    # ← замени!
+  name: git-gateway
+  repo: Trinkie/my-site-cms
   branch: main
-  auth_type: implicit
-  client_id: Ov23liZ5R135pDHlQy5x      # ← вставь из п.1
-  client_secret: 1b54ebf110cbf580f01f0db987f74977cef05427      # ← вставь из п.1
+
+  # PKCE flow (no client_secret stored in repo)
+  auth_type: pkce
+
+  # DecapBridge endpoints (site-specific)
+  base_url: https://auth.decapbridge.com
+  auth_endpoint: /sites/450c18ac-7bc9-4a39-8bbc-f66612f5e87b/pkce
+  auth_token_endpoint: /sites/450c18ac-7bc9-4a39-8bbc-f66612f5e87b/token
+  gateway_url: https://gateway.decapbridge.com
 
 media_folder: "images/uploads"
 public_folder: "/images/uploads"
@@ -14,7 +23,7 @@ collections:
     label: "Данные"
     files:
       - name: "filament"
-        label: "Филaмент"
+        label: "Филамент"
         file: "content/filament.json"
         format: "json"
         fields:
@@ -22,6 +31,7 @@ collections:
             name: "items"
             widget: "list"
             fields:
-              - {label: "Название", name: "title", widget: "string"}
-              - {label: "Цена", name: "price", widget: "number"}
-
+              - { label: "Название", name: "title", widget: "string" }
+              - { label: "Картинка", name: "image", widget: "image", required: false }
+              - { label: "В наличии", name: "in_stock", widget: "boolean", default: true }
+              - { label: "Описание", name: "description", widget: "text", required: false }
