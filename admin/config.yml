@@ -1,0 +1,26 @@
+backend:
+  name: github
+  repo: https://github.com/Trinkie/my-site-cms    # ← замени!
+  branch: main
+  auth_type: implicit
+  client_id: Ov23liZ5R135pDHlQy5x      # ← вставь из п.1
+  client_secret: 1b54ebf110cbf580f01f0db987f74977cef05427      # ← вставь из п.1
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "data"
+    label: "Данные"
+    files:
+      - name: "filament"
+        label: "Филaмент"
+        file: "content/filament.json"
+        format: "json"
+        fields:
+          - label: "Позиции"
+            name: "items"
+            widget: "list"
+            fields:
+              - {label: "Название", name: "title", widget: "string"}
+              - {label: "Цена", name: "price", widget: "number"}
