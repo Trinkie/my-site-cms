@@ -20,7 +20,7 @@ jobs:
           port: 21
 
           # Заливаем на сервер ТОЛЬКО папку сайта
-          local-dir: "./public_html/"
+          local-dir: "./"
 
           # Льём в "текущую" папку FTP-пользователя
           server-dir: "./"
