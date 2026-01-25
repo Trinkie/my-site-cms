@@ -352,6 +352,7 @@
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
+      min-height: 260px;
     }
     .fc-viewport::-webkit-scrollbar{ display: none; }
 
@@ -680,7 +681,9 @@
         <div class="content-item">
           <div class="filament-carousel">
             <button class="fc-btn" id="fcPrev" type="button" aria-label="Предыдущий филамент">‹</button>
-            <div class="fc-viewport" id="fcViewport" aria-label="Карусель филамента"></div>
+            <div class="fc-viewport" id="fcViewport" aria-label="Карусель филамента">
+              <div class="fc-item"><div class="fc-name">Загрузка…</div><div class="fc-sub">Если блок не меняется — проверь, что загрузил новый index.html</div></div>
+            </div>
             <button class="fc-btn" id="fcNext" type="button" aria-label="Следующий филамент">›</button>
           </div>
 
@@ -933,6 +936,19 @@
       </div>
     </div>
   </section>
+
+
+  <!-- VERSION: filament-modal-v2 -->
+  <!-- Filament image modal -->
+  <div class="img-modal" id="imgModal" role="dialog" aria-modal="true" aria-label="Просмотр изображения филамента">
+    <div class="img-modal__panel" role="document">
+      <div class="img-modal__bar">
+        <div class="img-modal__title" id="imgModalTitle">Изображение</div>
+        <button class="img-modal__close" id="imgModalClose" type="button" aria-label="Закрыть">✕</button>
+      </div>
+      <img class="img-modal__img" id="imgModalImg" alt="" />
+    </div>
+  </div>
 
   <script>
     // Smooth anchors
@@ -1231,17 +1247,21 @@
         }
       }
 
+      function renderEmpty(msg) {
+        viewport.innerHTML =
+          '<div class="fc-item">' +
+            '<div class="fc-name">' + (msg || 'Нет филамента') + '</div>' +
+            '<div class="fc-sub">Проверь файл /content/filament.json и что он открывается в браузере.</div>' +
+          '</div>';
+        dotsWrap.innerHTML = '';
+      }
+
       function render() {
         viewport.innerHTML = '';
         dotsWrap.innerHTML = '';
 
         if (!items.length) {
-          const empty = document.createElement('div');
-          empty.className = 'fc-item';
-          empty.innerHTML =
-            '<div class="fc-name">Нет филамента</div>' +
-            '<div class="fc-sub">Проверь /content/filament.json</div>';
-          viewport.appendChild(empty);
+          renderEmpty('Нет филамента');
           return;
         }
 
@@ -1320,23 +1340,13 @@
         } catch (e) {
           console.error(e);
           items = [];
+          renderEmpty('Не удалось загрузить список филамента');
+          return;
         }
         render();
       })();
     })();
   </script>
-
-  <!-- Filament image modal -->
-  <div class="img-modal" id="imgModal" role="dialog" aria-modal="true" aria-label="Просмотр изображения филамента">
-    <div class="img-modal__panel" role="document">
-      <div class="img-modal__bar">
-        <div class="img-modal__title" id="imgModalTitle">Изображение</div>
-        <button class="img-modal__close" id="imgModalClose" type="button" aria-label="Закрыть">✕</button>
-      </div>
-      <img class="img-modal__img" id="imgModalImg" alt="" />
-    </div>
-  </div>
-
 </body>
 </html>
 
