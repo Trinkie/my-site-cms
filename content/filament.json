@@ -10,6 +10,56 @@
       "in_stock": false,
       "title": "ABS+ eSUN signal red",
       "image": "/images/uploads/abs-signal-red.webp"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-silver.webp",
+      "title": "ABS+ eSUN silver"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-white.webp",
+      "title": "ABS+ eSUN white"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-grey.webp",
+      "title": "ABS+ eSUN grey"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-peak-green.webp",
+      "title": "ABS+ eSUN peak green"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-brown.webp",
+      "title": "ABS+ eSUN brown"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-green.webp",
+      "title": "ABS+ eSUN green"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-purple.webp",
+      "title": "ABS+ eSUN purple"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-blue.webp",
+      "title": "ABS+ eSUN blue"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-orange.webp",
+      "title": "ABS+ eSUN orange"
+    },
+    {
+      "in_stock": false,
+      "image": "/images/uploads/abs-light-blue.webp",
+      "title": "ABS+ eSUN light blue"
     }
   ]
 }
