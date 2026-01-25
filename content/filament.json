@@ -5,6 +5,10 @@
       "title": "ABS+ eSUN black",
       "image": "/images/uploads/abs-black.jpg",
       "description": "---"
+    },
+    {
+      "in_stock": true,
+      "title": "ABS+ eSUN signal red"
     }
   ]
 }
