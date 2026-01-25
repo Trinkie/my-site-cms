@@ -23,4 +23,5 @@ jobs:
           local-dir: "./"
 
           # Льём в "текущую" папку FTP-пользователя
-          server-dir: "./"
+          server-dir: "public_html/"
+
