@@ -682,7 +682,7 @@
           <div class="filament-carousel">
             <button class="fc-btn" id="fcPrev" type="button" aria-label="Предыдущий филамент">‹</button>
             <div class="fc-viewport" id="fcViewport" aria-label="Карусель филамента">
-              <div class="fc-item"><div class="fc-name">Загрузка…</div><div class="fc-sub">Если блок не меняется — проверь, что загрузил новый index.html</div></div>
+              <div class="fc-item"><div class="fc-name">Загрузка…</div><div class="fc-sub">Если не меняется — открой F12 → Console и пришли ошибку</div></div>
             </div>
             <button class="fc-btn" id="fcNext" type="button" aria-label="Следующий филамент">›</button>
           </div>
@@ -938,7 +938,7 @@
   </section>
 
 
-  <!-- VERSION: filament-modal-v2 -->
+  <!-- VERSION: filament-modal-v3 -->
   <!-- Filament image modal -->
   <div class="img-modal" id="imgModal" role="dialog" aria-modal="true" aria-label="Просмотр изображения филамента">
     <div class="img-modal__panel" role="document">
@@ -1183,14 +1183,26 @@
 
       let items = [];
 
-      async function loadFilament() {
-        const url = '/content/filament.json?v=' + Date.now();
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error('filament.json HTTP ' + res.status);
-        const data = await res.json();
+      function normalizeItems(data) {
         if (data && Array.isArray(data.items)) return data.items;
         if (Array.isArray(data)) return data;
         return [];
+      }
+
+      async function loadFilament() {
+        const url = '/content/filament.json';
+        const res = await fetch(url, { cache: 'no-store' });
+        const text = await res.text();
+        if (!res.ok) {
+          const err = new Error('HTTP ' + res.status);
+          err.httpStatus = res.status;
+          err.body = text;
+          throw err;
+        }
+        // Убираем BOM, если есть
+        const cleaned = (text || '').replace(/^﻿/, '').trim();
+        const data = JSON.parse(cleaned);
+        return normalizeItems(data);
       }
 
       function getItemStepPx() {
@@ -1247,11 +1259,11 @@
         }
       }
 
-      function renderEmpty(msg) {
+      function renderMessage(title, sub) {
         viewport.innerHTML =
           '<div class="fc-item">' +
-            '<div class="fc-name">' + (msg || 'Нет филамента') + '</div>' +
-            '<div class="fc-sub">Проверь файл /content/filament.json и что он открывается в браузере.</div>' +
+            '<div class="fc-name">' + title + '</div>' +
+            (sub ? ('<div class="fc-sub">' + sub + '</div>') : '') +
           '</div>';
         dotsWrap.innerHTML = '';
       }
@@ -1261,7 +1273,7 @@
         dotsWrap.innerHTML = '';
 
         if (!items.length) {
-          renderEmpty('Нет филамента');
+          renderMessage('Нет филамента', 'Проверь структуру /content/filament.json: нужен массив или {"items": [...]}');
           return;
         }
 
@@ -1334,13 +1346,16 @@
         if (e.key === 'Escape' && modal && modal.classList.contains('open')) closeModal();
       });
 
+      renderMessage('Загрузка…', 'Получаем /content/filament.json');
+
       (async function init() {
         try {
           items = await loadFilament();
+          console.log('[filament] loaded items:', items.length);
         } catch (e) {
-          console.error(e);
-          items = [];
-          renderEmpty('Не удалось загрузить список филамента');
+          console.error('[filament] load error:', e);
+          const extra = e && e.httpStatus ? ('HTTP ' + e.httpStatus) : (e && e.message ? e.message : '');
+          renderMessage('Не удалось загрузить филамент', extra || 'Смотри ошибку в Console');
           return;
         }
         render();
