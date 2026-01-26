@@ -671,7 +671,6 @@
           </div>
 
           <div class="fc-dots" id="fcDots" aria-label="Индикаторы карусели"></div>
-          <div class="hint" style="text-align:left;margin-top:0.6rem;opacity:0.75;">Источник филамента: <span id="filamentSource">—</span></div>
 
           <div class="hint" style="text-align:left;margin-top:0.8rem;">
             Скоро сделаем блок “Доступный филамент” (в наличии и под заказ) — ты будешь менять наличие через админ-панель.
@@ -1139,7 +1138,7 @@
     })();
 
     // ===== Filament carousel =====
-    (async function initFilamentCarousel() {
+    (function initFilamentCarousel() {
       // Админка может подменять это через window.FILAMENTS_FROM_ADMIN = [...]
       // Формат: [{id,name,image,inStock}]
       const DEFAULT_FILAMENTS = [
@@ -1149,34 +1148,33 @@
         { id: "pla",         name: "PLA (пример)",        image: "images/filament/pla.jpg",           inStock: false }
       ];
 
-      let filaments = DEFAULT_FILAMENTS;
-
-      // 1) Admin injected list (fast path)
-      const fromAdminRaw = window.FILAMENTS_FROM_ADMIN ?? window.FILAMENTS_FROM_CMS ?? window.FILAMENTSFROMADMIN;
-      if (Array.isArray(fromAdminRaw) && fromAdminRaw.length) {
-        filaments = fromAdminRaw;
-      } else {
-        // 2) Fallback: load from JSON generated/updated by admin
-        const urls = ['content/filament.json', '/content/filament.json'];
-        for (const u of urls) {
-          try {
-            const res = await fetch(u + '?ts=' + Date.now(), { cache: 'no-store' });
-            if (!res.ok) continue;
-            const data = await res.json();
-            const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : (Array.isArray(data.filaments) ? data.filaments : []));
-            if (!items.length) continue;
-            // Normalize fields
-            filaments = items.map((it, idx) => ({
-              id: (it.id ?? it.slug ?? it.code ?? ('f' + idx)).toString(),
-              name: (it.name ?? it.title ?? it.material ?? ('Филамент ' + (idx + 1))).toString(),
-              image: (it.image ?? it.img ?? it.photo ?? 'images/filament/placeholder.jpg').toString(),
-              inStock: Boolean(it.instock ?? it.inStock ?? it.available ?? false),
-              specs: Array.isArray(it.specs) ? it.specs : []
-            }));
-            break;
-          } catch (e) { /* ignore */ }
+      // --- stock parsing helpers (admin may send boolean/0-1/strings/snake_case) ---
+      function toBool(v) {
+        if (typeof v === 'boolean') return v;
+        if (typeof v === 'number') return v > 0;
+        if (typeof v === 'string') {
+          const s = v.trim().toLowerCase();
+          if (['1','true','yes','y','on','in','available','instock','в наличии','есть'].includes(s)) return true;
+          if (['0','false','no','n','off','out','preorder','unavailable','под заказ','нет'].includes(s)) return false;
         }
+        return Boolean(v);
       }
+
+      function normalizeFilament(it, idx) {
+        const rawStock = it?.inStock ?? it?.instock ?? it?.in_stock ?? it?.available ?? it?.isAvailable ?? it?.stock ?? it?.qty ?? it?.quantity;
+        return {
+          id: (it?.id ?? it?.slug ?? it?.code ?? ('f' + idx)).toString(),
+          name: (it?.name ?? it?.title ?? it?.material ?? ('Филамент ' + (idx + 1))).toString(),
+          image: (it?.image ?? it?.img ?? it?.photo ?? 'images/filament/placeholder.jpg').toString(),
+          inStock: toBool(rawStock),
+          specs: Array.isArray(it?.specs) ? it.specs : []
+        };
+      }
+
+
+      const filaments = Array.isArray(window.FILAMENTS_FROM_ADMIN) && window.FILAMENTS_FROM_ADMIN.length
+        ? window.FILAMENTS_FROM_ADMIN
+        : DEFAULT_FILAMENTS;
 
       const viewport = document.getElementById("fcViewport");
       const dotsWrap = document.getElementById("fcDots");
@@ -1261,14 +1259,11 @@
 
       // Хелпер для админки/консоли: window.setFilamentStatus("abs_black", true)
       window.setFilamentStatus = function(id, inStock) {
-        const f = filaments.find(x => x.id === id);
+        const sid = (id == null) ? '' : String(id);
+        const f = filaments.find(x => String(x.id) === sid);
         if (!f) return false;
-        f.inStock = Boolean(inStock);
+        f.inStock = toBool(inStock);
         render();
-      const srcEl = document.getElementById('filamentSource');
-      if (srcEl) {
-        srcEl.textContent = (Array.isArray(fromAdminRaw) && fromAdminRaw.length) ? 'админка' : 'json/дефолт';
-      }
         return true;
       };
 
