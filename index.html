@@ -352,8 +352,6 @@
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
-      min-width: 0;
-      -webkit-overflow-scrolling: touch;
     }
     .fc-viewport::-webkit-scrollbar{ display: none; }
 
@@ -474,10 +472,7 @@
         grid-auto-columns: 100% !important;
         gap: 0.75rem !important;
         padding: 0.2rem 0 !important;
-      
-      min-width: 0;
-      -webkit-overflow-scrolling: touch;
-    }
+      }
 
       /* Уменьшаем горизонтальные отступы карточки, чтобы контент не "упирался" */
       #filament .content-item{
@@ -676,6 +671,7 @@
           </div>
 
           <div class="fc-dots" id="fcDots" aria-label="Индикаторы карусели"></div>
+          <div class="hint" style="text-align:left;margin-top:0.6rem;opacity:0.75;">Источник филамента: <span id="filamentSource">—</span></div>
 
           <div class="hint" style="text-align:left;margin-top:0.8rem;">
             Скоро сделаем блок “Доступный филамент” (в наличии и под заказ) — ты будешь менять наличие через админ-панель.
@@ -1143,7 +1139,7 @@
     })();
 
     // ===== Filament carousel =====
-    (function initFilamentCarousel() {
+    (async function initFilamentCarousel() {
       // Админка может подменять это через window.FILAMENTS_FROM_ADMIN = [...]
       // Формат: [{id,name,image,inStock}]
       const DEFAULT_FILAMENTS = [
@@ -1153,9 +1149,34 @@
         { id: "pla",         name: "PLA (пример)",        image: "images/filament/pla.jpg",           inStock: false }
       ];
 
-      const filaments = Array.isArray(window.FILAMENTS_FROM_ADMIN) && window.FILAMENTS_FROM_ADMIN.length
-        ? window.FILAMENTS_FROM_ADMIN
-        : DEFAULT_FILAMENTS;
+      let filaments = DEFAULT_FILAMENTS;
+
+      // 1) Admin injected list (fast path)
+      const fromAdminRaw = window.FILAMENTS_FROM_ADMIN ?? window.FILAMENTS_FROM_CMS ?? window.FILAMENTSFROMADMIN;
+      if (Array.isArray(fromAdminRaw) && fromAdminRaw.length) {
+        filaments = fromAdminRaw;
+      } else {
+        // 2) Fallback: load from JSON generated/updated by admin
+        const urls = ['content/filament.json', '/content/filament.json'];
+        for (const u of urls) {
+          try {
+            const res = await fetch(u + '?ts=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) continue;
+            const data = await res.json();
+            const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : (Array.isArray(data.filaments) ? data.filaments : []));
+            if (!items.length) continue;
+            // Normalize fields
+            filaments = items.map((it, idx) => ({
+              id: (it.id ?? it.slug ?? it.code ?? ('f' + idx)).toString(),
+              name: (it.name ?? it.title ?? it.material ?? ('Филамент ' + (idx + 1))).toString(),
+              image: (it.image ?? it.img ?? it.photo ?? 'images/filament/placeholder.jpg').toString(),
+              inStock: Boolean(it.instock ?? it.inStock ?? it.available ?? false),
+              specs: Array.isArray(it.specs) ? it.specs : []
+            }));
+            break;
+          } catch (e) { /* ignore */ }
+        }
+      }
 
       const viewport = document.getElementById("fcViewport");
       const dotsWrap = document.getElementById("fcDots");
@@ -1244,6 +1265,10 @@
         if (!f) return false;
         f.inStock = Boolean(inStock);
         render();
+      const srcEl = document.getElementById('filamentSource');
+      if (srcEl) {
+        srcEl.textContent = (Array.isArray(fromAdminRaw) && fromAdminRaw.length) ? 'админка' : 'json/дефолт';
+      }
         return true;
       };
 
