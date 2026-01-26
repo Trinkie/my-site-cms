@@ -352,6 +352,9 @@
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
+    
+      min-width: 0;
+      -webkit-overflow-scrolling: touch;
     }
     .fc-viewport::-webkit-scrollbar{ display: none; }
 
@@ -472,7 +475,10 @@
         grid-auto-columns: 100% !important;
         gap: 0.75rem !important;
         padding: 0.2rem 0 !important;
-      }
+      
+      min-width: 0;
+      -webkit-overflow-scrolling: touch;
+    }
 
       /* Уменьшаем горизонтальные отступы карточки, чтобы контент не "упирался" */
       #filament .content-item{
@@ -1138,7 +1144,7 @@
     })();
 
     // ===== Filament carousel =====
-    (function initFilamentCarousel() {
+    (async function initFilamentCarousel() {
       // Админка может подменять это через window.FILAMENTS_FROM_ADMIN = [...]
       // Формат: [{id,name,image,inStock}]
       const DEFAULT_FILAMENTS = [
@@ -1148,14 +1154,14 @@
         { id: "pla",         name: "PLA (пример)",        image: "images/filament/pla.jpg",           inStock: false }
       ];
 
-      // --- stock parsing helpers (admin may send boolean/0-1/strings/snake_case) ---
+      // --- stock + item normalization ---
       function toBool(v) {
         if (typeof v === 'boolean') return v;
         if (typeof v === 'number') return v > 0;
         if (typeof v === 'string') {
           const s = v.trim().toLowerCase();
-          if (['1','true','yes','y','on','in','available','instock','в наличии','есть'].includes(s)) return true;
-          if (['0','false','no','n','off','out','preorder','unavailable','под заказ','нет'].includes(s)) return false;
+          if (['1','true','yes','y','on','available','instock','in','есть','в наличии'].includes(s)) return true;
+          if (['0','false','no','n','off','preorder','out','unavailable','нет','под заказ'].includes(s)) return false;
         }
         return Boolean(v);
       }
@@ -1164,17 +1170,43 @@
         const rawStock = it?.inStock ?? it?.instock ?? it?.in_stock ?? it?.available ?? it?.isAvailable ?? it?.stock ?? it?.qty ?? it?.quantity;
         return {
           id: (it?.id ?? it?.slug ?? it?.code ?? ('f' + idx)).toString(),
-          name: (it?.name ?? it?.title ?? it?.material ?? ('Филамент ' + (idx + 1))).toString(),
+          name: (it?.name ?? it?.title ?? ('Филамент ' + (idx + 1))).toString(),
           image: (it?.image ?? it?.img ?? it?.photo ?? 'images/filament/placeholder.jpg').toString(),
           inStock: toBool(rawStock),
           specs: Array.isArray(it?.specs) ? it.specs : []
         };
       }
 
+      async function loadFilamentsFromJson() {
+        const urls = ['content/filament.json', '/content/filament.json'];
+        for (const base of urls) {
+          try {
+            const res = await fetch(base + '?ts=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) continue;
+            const data = await res.json();
+            const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : (Array.isArray(data.filaments) ? data.filaments : []));
+            if (!items.length) continue;
+            return items.map(normalizeFilament);
+          } catch (e) {
+            // ignore
+          }
+        }
+        return null;
+      }
 
-      const filaments = Array.isArray(window.FILAMENTS_FROM_ADMIN) && window.FILAMENTS_FROM_ADMIN.length
-        ? window.FILAMENTS_FROM_ADMIN
-        : DEFAULT_FILAMENTS;
+
+      
+      const fromAdminRaw = window.FILAMENTS_FROM_ADMIN;
+      const fromAdmin = (Array.isArray(fromAdminRaw) && fromAdminRaw.length) ? fromAdminRaw.map(normalizeFilament) : null;
+
+      let filaments = fromAdmin || DEFAULT_FILAMENTS.map(normalizeFilament);
+
+      // If admin didn't inject array, try JSON file updated by admin-panel
+      if (!fromAdmin) {
+        const fromJson = await loadFilamentsFromJson();
+        if (fromJson && fromJson.length) filaments = fromJson;
+      }
+
 
       const viewport = document.getElementById("fcViewport");
       const dotsWrap = document.getElementById("fcDots");
@@ -1259,8 +1291,7 @@
 
       // Хелпер для админки/консоли: window.setFilamentStatus("abs_black", true)
       window.setFilamentStatus = function(id, inStock) {
-        const sid = (id == null) ? '' : String(id);
-        const f = filaments.find(x => String(x.id) === sid);
+        const f = filaments.find(x => x.id === id);
         if (!f) return false;
         f.inStock = toBool(inStock);
         render();
