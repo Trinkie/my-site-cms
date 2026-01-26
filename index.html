@@ -11,7 +11,7 @@
     :root { --green: #00AE42; --card-width: 900px; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #e8ecef 0%, #d5e0e8 30%, #c3d4e0 60%, #b8c8d8 100%);
       color: #333;
       line-height: 1.6;
@@ -25,16 +25,17 @@
       transform: translateX(-50%);
       width: var(--card-width);
       height: 70px;
-      background: rgba(255, 255, 255, 0.45);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
       border-radius: 40px;
       z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0 20px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
     }
 
     .nav-glass nav ul {
@@ -82,18 +83,20 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       padding: 2.5rem 2rem;
       border-radius: 40px;
       width: var(--card-width);
       max-width: 90vw;
       text-align: center;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.12);
-      border: 1px solid rgba(0,174,66,0.25);
-      transition: all 0.4s ease;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .card:hover { transform: translateY(-8px); box-shadow: 0 25px 70px rgba(0,0,0,0.18); }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
 
     .card h1 {
       font-size: clamp(3rem, 8vw, 5rem);
@@ -117,25 +120,25 @@
     .content-grid, .process-container, .advantages-grid { margin: 2rem auto; max-width: 900px; }
 
     .content-item, .process-step, .advantage-item {
-      background: rgba(255, 255, 255, 0.9);
-      border: 3px solid transparent;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
-        linear-gradient(90deg, var(--green), #00D45E);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
       border-radius: 25px;
       padding: 1.8rem;
       margin-bottom: 1.5rem;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-      background-clip: padding-box, border-box;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       text-align: left;
     }
 
     .content-item:hover, .process-step:hover, .advantage-item:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 45px rgba(0,174,66,0.2);
+      box-shadow: 0 16px 40px rgba(0,174,66,0.15);
+      border-color: rgba(0, 174, 66, 0.3);
+      background: rgba(255, 255, 255, 0.8);
     }
 
     .service-price {
@@ -219,9 +222,11 @@
     input[type="text"], input[type="email"], input[type="number"], textarea, select {
       width: 100%;
       padding: 1rem 1.1rem;
-      border: 2px solid rgba(255,255,255,0.5);
+      border: 1.5px solid rgba(255,255,255,0.6);
       border-radius: 15px;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       font-size: 1rem;
       transition: all 0.3s ease;
       font-family: inherit;
@@ -241,8 +246,9 @@
       border-radius: 16px;
       cursor: pointer;
       user-select: none;
-      border: 2px solid rgba(0, 174, 66, 0.18);
-      background: rgba(255,255,255,0.8);
+      border: 1.5px solid rgba(0, 174, 66, 0.2);
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
       transition: all 0.25s ease;
     }
     .choice:hover {
@@ -258,8 +264,9 @@
 
     .file-box {
       border-radius: 18px;
-      border: 2px dashed rgba(0, 174, 66, 0.35);
-      background: rgba(255,255,255,0.75);
+      border: 1.5px dashed rgba(0, 174, 66, 0.3);
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(10px);
       padding: 1rem;
     }
     .file-row { display: grid; grid-template-columns: 1fr; gap: 0.6rem; }
@@ -267,8 +274,9 @@
       width: 100%;
       padding: 0.9rem;
       border-radius: 14px;
-      border: 2px solid rgba(255,255,255,0.5);
-      background: rgba(255,255,255,0.95);
+      border: 1.5px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
     }
     .files-list { font-size: 0.92rem; color: #4d4d4d; line-height: 1.4; margin-top: 0.35rem; }
     .files-list .item { padding: 0.25rem 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -288,10 +296,11 @@
     }
 
     .calc-kpi {
-      background: rgba(255,255,255,0.92);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
       border-radius: 22px;
       padding: 1.2rem 1.2rem;
-      border: 2px solid rgba(0,174,66,0.22);
+      border: 1.5px solid rgba(0,174,66,0.2);
       text-align: left;
     }
     .calc-kpi h4 { margin-bottom: 0.35rem; color: var(--green); font-size: 1.1rem; }
@@ -310,17 +319,18 @@
     /* ===== FAQ ===== */
     .faq { margin-top: 1.2rem; text-align: left; }
     .faq details {
-      background: rgba(255, 255, 255, 0.9);
-      border: 2px solid rgba(0, 174, 66, 0.18);
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(0, 174, 66, 0.2);
       border-radius: 18px;
       padding: 0.9rem 1rem;
       margin: 0.6rem 0;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
     }
     .faq summary { cursor: pointer; font-weight: 800; color: #1f1f1f; outline: none; }
     .faq p { margin-top: 0.7rem; color: #555; font-size: 0.98rem; line-height: 1.55; }
 
-    /* ===== Filament carousel (scroll snap) ===== */
+    /* ===== Filament carousel ===== */
     .filament-carousel{
       display: grid;
       grid-template-columns: 44px 1fr 44px;
@@ -331,16 +341,17 @@
       width: 44px;
       height: 44px;
       border-radius: 14px;
-      border: 2px solid rgba(0, 174, 66, 0.22);
-      background: rgba(255,255,255,0.92);
+      border: 1.5px solid rgba(0, 174, 66, 0.3);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
       color: var(--green);
       font-size: 1.6rem;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .fc-btn:hover{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,0.12); }
+    .fc-btn:hover{ transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 
     .fc-viewport{
       display: grid;
@@ -352,16 +363,19 @@
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
+      min-width: 0;
+      -webkit-overflow-scrolling: touch;
     }
     .fc-viewport::-webkit-scrollbar{ display: none; }
 
     .fc-item{
       scroll-snap-align: center;
       border-radius: 22px;
-      border: 2px solid rgba(0, 174, 66, 0.18);
-      background: rgba(255,255,255,0.92);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
       padding: 1rem;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
       text-align: left;
     }
     .fc-img{
@@ -370,7 +384,13 @@
       object-fit: cover;
       border-radius: 18px;
       border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(0,0,0,0.03);
+      background: rgba(255,255,255,0.9);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .fc-img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,174,66,0.2);
     }
     .fc-name{ margin-top: 0.85rem; font-weight: 900; color: #1f1f1f; font-size: 1.05rem; }
 
@@ -397,8 +417,6 @@
     }
     .fc-sub{ margin-top: 0.5rem; color: #555; font-size: 0.95rem; line-height: 1.35; }
 
-.fc-add{margin-top:0.85rem;width:100%;padding:0.9rem 1.1rem;border-radius:16px;border:none;cursor:pointer;font-weight:900;background:linear-gradient(135deg,var(--green),#00D45E);color:#fff;box-shadow:0 10px 24px rgba(0,174,66,.35);transition:transform .15s ease,box-shadow .2s ease}.fc-add:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(0,174,66,.45)}
-
     .fc-dots{
       display: flex;
       gap: 0.45rem;
@@ -417,6 +435,47 @@
     .fc-dot.active{
       background: rgba(0, 174, 66, 0.65);
       border-color: rgba(0, 174, 66, 0.7);
+    }
+
+    /* Модальное окно */
+    #filamentModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      display: none;
+    }
+    #filamentModal.active { display: flex; }
+    #filamentModal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    #filamentModal button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.95);
+      font-size: 32px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+    #filamentModal button:hover {
+      background: #fff;
+      transform: rotate(90deg);
     }
 
     @media (max-width: 1024px) {
@@ -453,8 +512,29 @@
       .calc-grid { grid-template-columns: 1fr; }
 
       .filament-carousel{ grid-template-columns: 38px 1fr 38px; }
-      .fc-btn{ width: 38px; height: 38px; border-radius: 12px; }
+      .fc-btn{ width: 38px; height: 38px; border-radius: 12px; font-size: 1.4rem; }
       .fc-img{ height: 160px; }
+
+      .fc-viewport{
+        grid-auto-columns: 100% !important;
+        gap: 0.75rem !important;
+        padding: 0.2rem 0 !important;
+      }
+
+      #filament .content-item{ padding: 1.1rem !important; }
+
+      .fc-item{ padding: 0.9rem !important; min-height: 0 !important; }
+
+      .fc-img{
+        aspect-ratio: auto !important;
+        height: 210px !important;
+        object-fit: contain !important;
+        background: rgba(255,255,255,0.95) !important;
+      }
+
+      .fc-name{ font-size: 1rem !important; }
+      .fc-dots{ gap: 0.35rem !important; }
+      .fc-dot{ width: 8px !important; height: 8px !important; }
     }
 
     @media (max-width: 480px) {
@@ -464,50 +544,12 @@
       .step-number { width: 50px; height: 50px; font-size: 1.3rem; }
       .advantages-grid { grid-template-columns: 1fr !important; }
       .advantage-item { height: 180px; }
-    }
-  
 
-    /* ===== Filament carousel mobile fix ===== */
-    @media (max-width: 768px) {
-      /* Делаем слайд ровно по ширине видимой области (без подрезаний) */
-      .fc-viewport{
-        grid-auto-columns: 100% !important;
-        gap: 0.75rem !important;
-        padding: 0.2rem 0 !important;
-      }
-
-      /* Уменьшаем горизонтальные отступы карточки, чтобы контент не "упирался" */
-      #filament .content-item{
-        padding: 1.1rem !important;
-      }
-
-      .fc-item{
-        padding: 0.9rem !important;
-        min-height: 0 !important;
-      }
-
-      /* На мобилке лучше показывать катушку целиком */
-      .fc-img{
-        aspect-ratio: auto !important;
-        height: 210px !important;
-        object-fit: contain !important;
-        background: rgba(255,255,255,0.95) !important;
-      }
-
-      .fc-name{ font-size: 1rem !important; }
-      .fc-add{ padding: 0.8rem 1rem !important; font-size: 0.95rem !important; }
-
-      .fc-dots{ gap: 0.35rem !important; }
-      .fc-dot{ width: 8px !important; height: 8px !important; }
-    }
-
-    @media (max-width: 480px) {
       .filament-carousel{ grid-template-columns: 34px 1fr 34px !important; }
       .fc-btn{ width: 34px !important; height: 34px !important; border-radius: 11px !important; font-size: 1.25rem !important; }
       .fc-img{ height: 190px !important; }
       #filament .content-item{ padding: 1rem !important; }
     }
-
   </style>
 </head>
 
@@ -518,7 +560,7 @@
         <li><a href="#home">Главная</a></li>
         <li><a href="#services">Услуги</a></li>
         <li><a href="#calculator">Калькулятор</a></li>
-        <li><a href="#filament">Доступный филамент</a></li>
+        <li><a href="#filament">Филамент</a></li>
         <li><a href="#advantages">Преимущества</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#process">Процесс</a></li>
@@ -541,7 +583,7 @@
     </div>
   </section>
 
-  <!-- 2) Услуги (цены обновлены) -->
+  <!-- 2) Услуги -->
   <section id="services">
     <div class="card">
       <h2>Наши услуги</h2>
@@ -587,20 +629,12 @@
       <h2>Калькулятор печати</h2>
       <p>
         Примерная цена <strong>только за печать</strong> копий одной и той же модели (без моделирования).<br>
-        Моделирование считается индивидуально, обычно 800–3000 ₽. После моделирования печать считаем по этому калькулятору.
+        Моделирование считается индивидуально, обычно 800–3000 ₽.
       </p>
 
       <div class="content-grid">
         <div class="content-item">
           <div class="calc-grid">
-            <div>
-              <label class="label" for="calcMaterial">Материал</label>
-              <select id="calcMaterial">
-                <option value="abs_red" data-ppg="8">Красный ABS</option>
-                <option value="absplus_black" data-ppg="10">Черный ABS+</option>
-              </select>
-            </div>
-
             <div>
               <label class="label" for="calcWeightG">Вес одной детали (г)</label>
               <input id="calcWeightG" type="number" min="0" step="1" value="50" />
@@ -632,14 +666,11 @@
             <div class="full">
               <div class="calc-kpi">
                 <h4>Итог (печать)</h4>
-
                 <div class="calc-price">
                   <span id="calcFinal">— ₽</span>
                   <span id="calcOld" class="hidden">— ₽</span>
                 </div>
-
                 <div class="calc-sub" id="calcSub">—</div>
-
                 <div style="text-align:center;">
                   <button type="button" class="btn" id="calcToFormBtn">Перенести в заявку</button>
                 </div>
@@ -649,7 +680,6 @@
                 В цену добавляется: +400 ₽ за модель (подготовка/запуск). Скидка 10/50/100 шт применяется к печати (не к доплатам).
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -658,11 +688,11 @@
     </div>
   </section>
 
-  <!-- 4) Филамент -->
+  <!-- 4) Доступный Филамент -->
   <section id="filament">
     <div class="card">
-      <h2>Доступный филамент</h2>
-      <p>Карусель показывает наличие: зелёный — в наличии, красный — под заказ (доставка 1–3 дня).</p>
+      <h2>Доступный Филамент</h2>
+      <p>Скоро добавим блок с актуальным наличием. Выбирайте материал из каталога ниже.</p>
 
       <div class="content-grid">
         <div class="content-item">
@@ -674,8 +704,9 @@
 
           <div class="fc-dots" id="fcDots" aria-label="Индикаторы карусели"></div>
 
-          <div class="hint" style="text-align:left;margin-top:0.8rem;">
-            Скоро сделаем блок “Доступный филамент” (в наличии и под заказ) — ты будешь менять наличие через админ-панель.
+          <div class="hint" style="text-align:left;margin-top:1.2rem;">
+            <strong>ABS+ от ABS отличается:</strong><br>
+            Повышенной плотностью, упругостью, твёрдостью и жёсткостью. Очень прочен на изгиб и разрыв. Устойчив к маслам, жирам, смазочным материалам, бензину и углеводородам. Не выцветает под УФ-излучением, не подвержен коррозии, выносит высокие температуры.
           </div>
         </div>
       </div>
@@ -710,7 +741,7 @@
         <div class="advantage-item">
           <div class="advantage-icon">🧵</div>
           <div class="advantage-title">Материалы eSUN</div>
-          <div class="advantage-desc">Используем только качественные материалы бренда Esun</div>
+          <div class="advantage-desc">Только качественные материалы</div>
         </div>
 
         <div class="advantage-item">
@@ -737,42 +768,42 @@
       <div class="faq">
         <details>
           <summary>Какие файлы вы принимаете для печати?</summary>
-          <p>Обычно для печати подойдут STL/STP/STEP. Если файла нет — можем смоделировать по фото/эскизу.</p>
+          <p>STL/STP/STEP. Если файла нет — можем смоделировать по фото/эскизу.</p>
         </details>
 
         <details>
           <summary>Сколько стоит моделирование?</summary>
-          <p>Моделирование считается индивидуально. Обычно 800–3000 ₽ в зависимости от сложности.</p>
+          <p>Индивидуально, обычно 800–3000 ₽ в зависимости от сложности.</p>
         </details>
 
         <details>
           <summary>Какие материалы доступны?</summary>
-          <p>Филамент есть в наличии и под заказ. Скоро добавим отдельный блок с доступным филаментом и актуальным статусом.</p>
+          <p>Филамент в наличии и под заказ (доставка 1–3 дня). Скоро добавим отдельный блок с актуальным статусом.</p>
         </details>
 
         <details>
           <summary>Почему цена может быть выше, чем в калькуляторе?</summary>
-          <p>Если деталь очень криволинейная/сложная, может потребоваться больше поддержек, времени печати и постобработки — тогда цена будет выше.</p>
+          <p>Если деталь криволинейная/сложная, может потребоваться больше поддержек и постобработки — тогда цена выше.</p>
         </details>
 
         <details>
           <summary>Какие сроки печати?</summary>
-          <p>Стандартно 1–3 дня, срочные заказы — по согласованию.</p>
+          <p>Стандартно 1–3 дня, срочные — по согласованию.</p>
         </details>
 
         <details>
           <summary>Можно ли сделать прочнее?</summary>
-          <p>Да, отметьте “повышенная прочность” — подберём настройки печати (без наценки).</p>
+          <p>Да, отметьте "повышенная прочность" — подберём настройки печати (без наценки).</p>
         </details>
 
         <details>
           <summary>Какие максимальные габариты печати?</summary>
-          <p>До 500×500×300 мм (если деталь больше — предложим печать частями и склейку/сборку).</p>
+          <p>До 500×500×300 мм. Если больше — предложим печать частями и склейку.</p>
         </details>
 
         <details>
-          <summary>Что нужно написать в заявке, чтобы быстро посчитать?</summary>
-          <p>Опишите назначение детали, условия (нагрузка/температура/улица), желаемые сроки и приложите файл/эскиз.</p>
+          <summary>Что написать в заявке для быстрого расчёта?</summary>
+          <p>Назначение детали, условия (нагрузка/температура/улица), сроки и приложите файл/эскиз.</p>
         </details>
       </div>
     </div>
@@ -873,10 +904,11 @@
             </div>
 
             <div class="full" id="materialsBlock">
-              <label class="label">Филамент</label>
-              <button type="button" class="btn" id="openFilamentBtn" style="margin-top:0.35rem;width:100%;">Выбрать филамент</button>
-              <div class="hint" id="chosenFilamentHint">Нажмите кнопку и выберите в каталоге</div>
-              <input type="hidden" id="chosenFilamentId" value="">
+              <label class="label" for="materialSelect">Материал</label>
+              <select id="materialSelect">
+                <option value="abs_red">Красный ABS</option>
+                <option value="absplus_black">Чёрный ABS+</option>
+              </select>
             </div>
 
             <div class="full" id="strengthBlock">
@@ -921,6 +953,12 @@
     </div>
   </section>
 
+  <!-- Модальное окно для картинок филамента -->
+  <div id="filamentModal">
+    <img id="filamentModalImg" src="" alt="Филамент">
+    <button id="filamentModalClose">×</button>
+  </div>
+
   <script>
     // Smooth anchors
     document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -959,10 +997,8 @@
     function updateFormByType(type) {
       attachmentsImagesBlock.classList.remove('hidden');
       modelFileBlock.classList.add('hidden');
-
       materialsBlock.classList.add('hidden');
       strengthBlock.classList.add('hidden');
-
       modelFile.required = false;
 
       if (type === 'modeling') {
@@ -1013,9 +1049,8 @@
       updateFormByType('modeling');
     });
 
-    // ===== Calculator logic (как было + 400 ₽ за модель) =====
+    // ===== Calculator logic =====
     (function initCalculator() {
-      const materialEl = document.getElementById('calcMaterial');
       const weightEl = document.getElementById('calcWeightG');
       const qtyEl = document.getElementById('calcQty');
       const urgentEl = document.getElementById('calcUrgent');
@@ -1026,21 +1061,16 @@
       const outSub = document.getElementById('calcSub');
       const toFormBtn = document.getElementById('calcToFormBtn');
 
-      // Настройки
-      const MIN_ORDER = 1200;     // минимум заказа
-      const MIN_PART  = 400;      // минимум за 1 шт
-      const URGENT_ADD = 700;     // срочность фикс
-      const MODEL_FEE  = 400;     // +400 ₽ за модель (один раз на заказ, т.к. печатаем копии одной модели)
+      const MIN_ORDER = 1200;
+      const MIN_PART = 400;
+      const URGENT_ADD = 700;
+      const MODEL_FEE = 400;
+      const PPG = 9;
 
       const fmtMoney = (n) => {
         const x = Math.round(Number(n) || 0);
-        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₽';
+        return x.toString().replace(/\B(?=(\\d{3})+(?!\\d))/g, ' ') + ' ₽';
       };
-
-      function getPPG() {
-        const opt = materialEl.options[materialEl.selectedIndex];
-        return Number(opt.getAttribute('data-ppg')) || 0;
-      }
 
       function getDiscountByQty(qty) {
         if (qty >= 100) return 0.15;
@@ -1049,30 +1079,22 @@
         return 0;
       }
 
-      function materialName() {
-        const opt = materialEl.options[materialEl.selectedIndex];
-        return opt ? opt.textContent.trim() : '';
-      }
-
       function recalc() {
-        const ppg = getPPG();
         const weightG = Math.max(0, Number(weightEl.value) || 0);
         const qty = Math.max(1, Math.floor(Number(qtyEl.value) || 1));
         const urgent = Number(urgentEl.value) === 1;
 
         const discount = getDiscountByQty(qty);
 
-        const plasticOne = weightG * ppg;
+        const plasticOne = weightG * PPG;
         const onePart = Math.max(MIN_PART, plasticOne);
 
         const printingSum = onePart * qty;
         const urgentFee = urgent ? URGENT_ADD : 0;
 
-        // Цена без скидки
         const oldBase = printingSum + MODEL_FEE + urgentFee;
         const oldPrice = Math.max(MIN_ORDER, oldBase);
 
-        // Цена со скидкой: скидка только на печать (printingSum)
         const discountedPrinting = printingSum * (1 - discount);
         const finalBase = discountedPrinting + MODEL_FEE + urgentFee;
         const finalPrice = Math.max(MIN_ORDER, finalBase);
@@ -1087,24 +1109,18 @@
         }
 
         const discountText = discount > 0 ? `скидка -${Math.round(discount * 100)}%` : 'без скидки';
-        outSub.textContent =
-          `${materialName()}, ${weightG} г, ${qty} шт, ${urgent ? 'срочно' : 'стандарт'}, ${discountText} (+400 ₽ за модель)`;
+        outSub.textContent = `ABS/ABS+, ${weightG} г, ${qty} шт, ${urgent ? 'срочно' : 'стандарт'}, ${discountText} (+400 ₽ за модель)`;
       }
 
       function pushToForm() {
         const contacts = document.querySelector('#contacts');
         if (contacts) contacts.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        // выбираем "Печать"
         const printRadio = document.querySelector('input[name="requestType"][value="print"]');
         if (printRadio) {
           printRadio.checked = true;
-          if (typeof updateFormByType === 'function') updateFormByType('print');
+          updateFormByType('print');
         }
-
-        // переносим только: материал, вес, прочность, количество, срочность
-        const formMaterial = document.getElementById('materialSelect');
-        if (formMaterial) formMaterial.value = materialEl.value;
 
         const strengthNeed = document.getElementById('strengthNeed');
         if (strengthNeed) strengthNeed.checked = strengthEl.checked;
@@ -1115,158 +1131,105 @@
 
         const desc = document.getElementById('taskDesc');
         if (desc) {
-          const block =
-            `Параметры печати (из калькулятора):\n` +
-            `- Материал: ${materialName()}\n` +
-            `- Вес (оценка): ${weightG} г (1 шт)\n` +
-            `- Количество: ${qty} шт\n` +
-            `- Срочность: ${urgent ? 'срочно' : 'стандарт'}\n` +
-            `- Повышенная прочность: ${strengthEl.checked ? 'да' : 'нет'}\n`;
-
-          const cur = desc.value.trim();
-          const cleaned = cur.replace(/Параметры печати \(из калькулятора\):[\s\S]*$/m, '').trim();
-          desc.value = (cleaned + (cleaned ? '\n\n' : '') + block).trim();
+          const block = `Параметры печати (из калькулятора):\n- Вес (оценка): ${weightG} г (1 шт)\n- Количество: ${qty} шт\n- Срочность: ${urgent ? 'срочно' : 'стандарт'}\n- Повышенная прочность: ${strengthEl.checked ? 'да' : 'нет'}\n`;
+          desc.value = (desc.value.trim() + '\n' + block).trim();
         }
       }
 
-      [materialEl, weightEl, qtyEl, urgentEl, strengthEl].forEach(el => {
-        el.addEventListener('change', recalc);
-        el.addEventListener('input', recalc);
-      });
+      weightEl.addEventListener('change', recalc);
+      weightEl.addEventListener('input', recalc);
+      qtyEl.addEventListener('change', recalc);
+      qtyEl.addEventListener('input', recalc);
+      urgentEl.addEventListener('change', recalc);
+      strengthEl.addEventListener('change', recalc);
       toFormBtn.addEventListener('click', pushToForm);
 
       recalc();
     })();
 
     // ===== Filament carousel =====
-    (function initFilamentCarousel() {
-      async function loadFilaments() {
-        try {
-          const now = Date.now();
-          const res = await fetch(`content/filament.json?v=${now}`);
-          if (res.ok) {
-            const json = await res.json();
-            return Array.isArray(json) ? json : [];
-          }
-        } catch(e) {}
-        return window.FILAMENTS_FROM_ADMIN || [];
-      }
-      loadFilaments().then(filaments => {
-        if (!filaments.length) {
-          const msg = document.createElement("div");
-          msg.className = "fc-item";
-          msg.innerHTML = "<div style=\"font-weight:900;font-size:1.15rem;color:#1f1f1f;\">Каталог пуст</div>";
-          document.getElementById("fcViewport").appendChild(msg);
-          return;
-        }
-        window.currentFilaments = filaments;
-
-      // Админка может подменять это через window.FILAMENTS_FROM_ADMIN = [...]
-      // Формат: [{id,name,image,inStock}]
+    (async function initFilamentCarousel() {
       const DEFAULT_FILAMENTS = [
-        { id: "abs_red",     name: "ABS Красный (eSUN)",  image: "images/filament/abs-red.jpg",       inStock: true  },
-        { id: "abs_black",   name: "ABS Черный (eSUN)",   image: "images/filament/abs-black.jpg",     inStock: false },
-        { id: "absplus_blk", name: "ABS+ Черный (eSUN)",  image: "images/filament/absplus-black.jpg", inStock: true  },
-        { id: "pla",         name: "PLA (пример)",        image: "images/filament/pla.jpg",           inStock: false }
+        { id: 'abs_red', name: 'ABS Красный (eSUN)', image: 'https://via.placeholder.com/240x180?text=ABS+Red', inStock: true },
+        { id: 'abs_black', name: 'ABS Чёрный (eSUN)', image: 'https://via.placeholder.com/240x180?text=ABS+Black', inStock: false },
+        { id: 'absplus_black', name: 'ABS+ Чёрный (eSUN)', image: 'https://via.placeholder.com/240x180?text=ABS+Plus+Black', inStock: true },
+        { id: 'pla', name: 'PLA (пример)', image: 'https://via.placeholder.com/240x180?text=PLA', inStock: false }
       ];
 
-      const filaments = Array.isArray(window.FILAMENTS_FROM_ADMIN) && window.FILAMENTS_FROM_ADMIN.length
-        ? window.FILAMENTS_FROM_ADMIN
-        : DEFAULT_FILAMENTS;
+      const filaments = DEFAULT_FILAMENTS;
+      let currentIndex = 0;
 
-      const viewport = document.getElementById("fcViewport");
-      const dotsWrap = document.getElementById("fcDots");
-      const prevBtn = document.getElementById("fcPrev");
-      const nextBtn = document.getElementById("fcNext");
+      const viewport = document.getElementById('fcViewport');
+      const dotsContainer = document.getElementById('fcDots');
+      const prevBtn = document.getElementById('fcPrev');
+      const nextBtn = document.getElementById('fcNext');
+      const modal = document.getElementById('filamentModal');
+      const modalImg = document.getElementById('filamentModalImg');
+      const modalClose = document.getElementById('filamentModalClose');
 
-      if (!viewport || !dotsWrap || !prevBtn || !nextBtn) return;
-
-      function render() {
-        viewport.innerHTML = "";
-        dotsWrap.innerHTML = "";
-
+      function renderFilaments() {
+        viewport.innerHTML = '';
         filaments.forEach((f, idx) => {
-          const item = document.createElement("div");
-          item.className = "fc-item";
-          item.dataset.index = String(idx);
-
-          const img = document.createElement("img");
-          img.className = "fc-img";
-          img.alt = f.name || "Филамент";
-          img.src = f.image || "";
-          img.loading = "lazy";
-          img.onerror = () => { img.style.opacity = "0.15"; };
-
-          const name = document.createElement("div");
-          name.className = "fc-name";
-          name.textContent = f.name || "Без названия";
-
-          const status = document.createElement("div");
-          status.className = "fc-status " + (f.inStock ? "in" : "preorder");
-          status.textContent = f.inStock ? "В наличии" : "Под заказ";
-
-          const sub = document.createElement("div");
-          sub.className = "fc-sub";
-          sub.textContent = f.inStock ? "Есть на складе." : "Доставка в течение 1–3 дней.";
-
-          item.appendChild(img);
-          item.appendChild(name);
-          item.appendChild(status);
-          item.appendChild(sub);
-
-          viewport.appendChild(item);
-
-          const dot = document.createElement("button");
-          dot.type = "button";
-          dot.className = "fc-dot" + (idx === 0 ? " active" : "");
-          dot.setAttribute("aria-label", `Перейти к слайду ${idx + 1}`);
-          dot.addEventListener("click", () => scrollToIndex(idx));
-          dotsWrap.appendChild(dot);
+          const div = document.createElement('div');
+          div.className = 'fc-item';
+          div.innerHTML = `
+            <img class="fc-img" src="${f.image}" alt="${f.name}" data-src="${f.image}">
+            <div class="fc-name">${f.name}</div>
+            <span class="fc-status ${f.inStock ? 'in' : 'preorder'}">
+              ${f.inStock ? '✓ В наличии' : '⏱ Под заказ'}
+            </span>
+          `;
+          viewport.appendChild(div);
         });
 
-        updateActiveDot();
+        document.querySelectorAll('.fc-img').forEach(img => {
+          img.addEventListener('click', () => {
+            modalImg.src = img.getAttribute('data-src');
+            modal.classList.add('active');
+          });
+        });
       }
 
-      function getItemStepPx() {
-        const first = viewport.querySelector(".fc-item");
-        if (!first) return viewport.clientWidth;
-        const style = getComputedStyle(viewport);
-        const gap = parseFloat(style.columnGap || style.gap || "0") || 0;
-        return first.getBoundingClientRect().width + gap;
+      function renderDots() {
+        dotsContainer.innerHTML = '';
+        filaments.forEach((_, idx) => {
+          const dot = document.createElement('button');
+          dot.className = 'fc-dot' + (idx === currentIndex ? ' active' : '');
+          dot.type = 'button';
+          dot.addEventListener('click', () => scrollToIndex(idx));
+          dotsContainer.appendChild(dot);
+        });
       }
 
-      function scrollToIndex(index) {
-        const idx = Math.max(0, Math.min(filaments.length - 1, index));
-        const step = getItemStepPx();
-        viewport.scrollTo({ left: step * idx, behavior: "smooth" });
+      function updateDots() {
+        document.querySelectorAll('.fc-dot').forEach((dot, idx) => {
+          dot.classList.toggle('active', idx === currentIndex);
+        });
       }
 
-      function currentIndex() {
-        const step = getItemStepPx();
-        return Math.max(0, Math.min(filaments.length - 1, Math.round(viewport.scrollLeft / step)));
+      function scrollToIndex(idx) {
+        currentIndex = Math.max(0, Math.min(idx, filaments.length - 1));
+        const item = viewport.children[currentIndex];
+        if (item) {
+          item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          updateDots();
+        }
       }
 
-      function updateActiveDot() {
-        const idx = currentIndex();
-        [...dotsWrap.querySelectorAll(".fc-dot")].forEach((d, i) => d.classList.toggle("active", i === idx));
-      }
+      renderFilaments();
+      renderDots();
 
-      prevBtn.addEventListener("click", () => scrollToIndex(currentIndex() - 1));
-      nextBtn.addEventListener("click", () => scrollToIndex(currentIndex() + 1));
-      viewport.addEventListener("scroll", () => window.requestAnimationFrame(updateActiveDot));
+      prevBtn.addEventListener('click', () => scrollToIndex(currentIndex - 1));
+      nextBtn.addEventListener('click', () => scrollToIndex(currentIndex + 1));
 
-      // Хелпер для админки/консоли: window.setFilamentStatus("abs_black", true)
-      window.setFilamentStatus = function(id, inStock) {
-        const f = filaments.find(x => x.id === id);
-        if (!f) return false;
-        f.inStock = Boolean(inStock);
-        render();
-        return true;
-      };
+      modalClose.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
 
-      render();
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+      });
     })();
   </script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </body>
 </html>
