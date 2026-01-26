@@ -7,7 +7,7 @@
       "description": "---"
     },
     {
-      "in_stock": false,
+      "in_stock": true,
       "title": "ABS+ eSUN signal red",
       "image": "/images/uploads/abs-signal-red.webp"
     },
