@@ -397,6 +397,38 @@
     }
     .fc-sub{ margin-top: 0.5rem; color: #555; font-size: 0.95rem; line-height: 1.35; }
 
+
+
+    .fc-add{
+      width: 100%;
+      margin-top: 0.9rem;
+      padding: 0.85rem 1.05rem;
+      border-radius: 16px;
+      border: 2px solid rgba(0, 174, 66, 0.22);
+      background: linear-gradient(135deg, var(--green), #00D45E);
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 174, 66, 0.22);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      font-family: inherit;
+    }
+    .fc-add:hover{ transform: translateY(-2px); box-shadow: 0 16px 32px rgba(0, 174, 66, 0.28); }
+    .fc-add:active{ transform: translateY(-1px); filter: brightness(0.98); }
+    .fc-add[disabled]{ cursor: not-allowed; opacity: 0.65; transform: none; box-shadow: none; }
+
+    #filament .fc-item.selected{
+      border-color: rgba(0, 174, 66, 0.60);
+      box-shadow: 0 18px 40px rgba(0, 174, 66, 0.16);
+    }
+    #filament .fc-add.is-selected{
+      background: rgba(0, 174, 66, 0.10);
+      color: #0b3b1e;
+      border-color: rgba(0, 174, 66, 0.55);
+      box-shadow: none;
+    }
     .fc-dots{
       display: flex;
       gap: 0.45rem;
@@ -872,9 +904,9 @@
 
             <div class="full" id="filamentFormBlock">
               <label class="label" for="selectedFilamentName">Филамент (обязательно)</label>
-              <input id="selectedFilamentName" type="text" placeholder="Выберите филамент в блоке «Филамент»" readonly>
+              <input id="selectedFilamentName" type="text" placeholder="Нажмите «Выбрать филамент»" readonly>
               <input id="selectedFilamentId" type="hidden">
-              <div class="hint" id="selectedFilamentHint">Не выбран. Нажмите кнопку ниже, чтобы выбрать.</div>
+              <div class="hint" id="selectedFilamentHint">Не выбран.</div>
               <button type="button" class="btn" id="goPickFilamentBtn" style="margin-top:0.8rem;">Выбрать филамент</button>
             </div>
 
@@ -970,11 +1002,27 @@
     const selectedFilamentHint = document.getElementById('selectedFilamentHint');
     const goPickFilamentBtn = document.getElementById('goPickFilamentBtn');
 
+    function syncFilamentUI() {
+      const selId = window.__selectedFilament && window.__selectedFilament.id;
+      document.querySelectorAll('#filament .fc-item').forEach(card => {
+        const fid = card.getAttribute('data-fid');
+        const btn = card.querySelector('.fc-add');
+        const isSel = selId && fid === selId;
+        card.classList.toggle('selected', Boolean(isSel));
+        if (btn) {
+          btn.classList.toggle('is-selected', Boolean(isSel));
+          btn.textContent = isSel ? 'Выбрано' : 'Добавить в заявку';
+          btn.disabled = Boolean(isSel);
+        }
+      });
+    }
+
     function setSelectedFilament(f) {
-      window.__selectedFilament = f ? { id: f.id, name: f.name } : null;
+      window.__selectedFilament = f ? { id: String(f.id), name: String(f.name) } : null;
       if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
       if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
-      if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Не выбран. Нажмите кнопку ниже, чтобы выбрать.';
+      if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Не выбран.';
+      syncFilamentUI();
     }
 
     if (goPickFilamentBtn) {
@@ -1184,14 +1232,20 @@
         if (typeof v === 'number') return v > 0;
         if (typeof v === 'string') {
           const s = v.trim().toLowerCase();
-          if (['1','true','yes','y','on','available','instock','in','в наличии'].includes(s)) return true;
-          if (['0','false','no','n','off','preorder','out','unavailable','под заказ','нет'].includes(s)) return false;
+          if (s.includes('налич')) return true;
+          if (s.includes('заказ') || s.includes('нет') || s.includes('out')) return false;
+          if (['1','true','yes','y','on','available','instock','in'].includes(s)) return true;
+          if (['0','false','no','n','off','preorder','unavailable'].includes(s)) return false;
         }
         return Boolean(v);
       }
 
       function normalizeFilament(it, idx) {
-        const rawStock = it?.inStock ?? it?.instock ?? it?.available ?? it?.isAvailable ?? it?.stock ?? it?.qty ?? it?.quantity;
+        const rawStock = (
+          it?.inStock ?? it?.instock ?? it?.in_stock ?? it?.isInStock ?? it?.is_in_stock ??
+          it?.available ?? it?.isAvailable ?? it?.availability ?? it?.status ?? it?.stock_status ??
+          it?.stock ?? it?.qty ?? it?.quantity
+        );
         return {
           id: String(it?.id ?? it?.slug ?? it?.code ?? ('f_' + idx)),
           name: String(it?.name ?? it?.title ?? ('Филамент ' + (idx + 1))),
@@ -1292,6 +1346,7 @@
           const item = document.createElement('div');
           item.className = 'fc-item';
           item.dataset.index = String(idx);
+          item.setAttribute('data-fid', String(f.id));
 
           const img = document.createElement('img');
           img.className = 'fc-img';
@@ -1338,6 +1393,7 @@
           dotsWrap.appendChild(dot);
         });
 
+        if (typeof syncFilamentUI === 'function') syncFilamentUI();
         updateActiveDot();
       }
 
