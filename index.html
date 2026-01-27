@@ -352,9 +352,6 @@
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
       scrollbar-width: none;
-    
-      min-width: 0;
-      -webkit-overflow-scrolling: touch;
     }
     .fc-viewport::-webkit-scrollbar{ display: none; }
 
@@ -475,10 +472,7 @@
         grid-auto-columns: 100% !important;
         gap: 0.75rem !important;
         padding: 0.2rem 0 !important;
-      
-      min-width: 0;
-      -webkit-overflow-scrolling: touch;
-    }
+      }
 
       /* Уменьшаем горизонтальные отступы карточки, чтобы контент не "упирался" */
       #filament .content-item{
@@ -876,6 +870,14 @@
               </div>
             </div>
 
+            <div class="full" id="filamentFormBlock">
+              <label class="label" for="selectedFilamentName">Филамент (обязательно)</label>
+              <input id="selectedFilamentName" type="text" placeholder="Выберите филамент в блоке «Филамент»" readonly>
+              <input id="selectedFilamentId" type="hidden">
+              <div class="hint" id="selectedFilamentHint">Не выбран. Нажмите кнопку ниже.</div>
+              <button type="button" class="btn" id="goPickFilamentBtn" style="margin-top:0.8rem;">Выбрать филамент</button>
+            </div>
+
             <div class="full" id="materialsBlock">
               <label class="label" for="materialSelect">Материал</label>
               <select id="materialSelect">
@@ -961,6 +963,28 @@
     const imagesList = document.getElementById('imagesList');
     const modelList = document.getElementById('modelList');
 
+    // ===== Filament -> Form (single select) =====
+    window.__selectedFilament = null;
+    const selectedFilamentName = document.getElementById('selectedFilamentName');
+    const selectedFilamentId = document.getElementById('selectedFilamentId');
+    const selectedFilamentHint = document.getElementById('selectedFilamentHint');
+    const goPickFilamentBtn = document.getElementById('goPickFilamentBtn');
+
+    function setSelectedFilament(f) {
+      window.__selectedFilament = f ? { id: f.id, name: f.name } : null;
+      if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
+      if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
+      if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Не выбран. Нажмите кнопку ниже.';
+    }
+
+    if (goPickFilamentBtn) {
+      goPickFilamentBtn.addEventListener('click', () => {
+        const fil = document.querySelector('#filament');
+        if (fil) fil.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+
     function updateFormByType(type) {
       attachmentsImagesBlock.classList.remove('hidden');
       modelFileBlock.classList.add('hidden');
@@ -1006,6 +1030,13 @@
       e.preventDefault();
       const type = document.querySelector('input[name="requestType"]:checked').value;
 
+      if (!window.__selectedFilament || !window.__selectedFilament.id) {
+        alert('Перед отправкой заявки нужно выбрать филамент.');
+        const fil = document.querySelector('#filament');
+        if (fil) fil.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
       if (type === 'print' && (!modelFile.files || modelFile.files.length === 0)) {
         alert('Для "Печать" нужно прикрепить STL/STP/STEP файл.');
         return;
@@ -1013,6 +1044,7 @@
 
       alert('✅ Запрос принят. Мы свяжемся в течение часа.');
       e.target.reset();
+      setSelectedFilament(null);
       imagesList.innerHTML = '';
       modelList.innerHTML = '';
       updateFormByType('modeling');
@@ -1144,7 +1176,7 @@
     })();
 
     // ===== Filament carousel =====
-    (async function initFilamentCarousel() {
+    (function initFilamentCarousel() {
       // Админка может подменять это через window.FILAMENTS_FROM_ADMIN = [...]
       // Формат: [{id,name,image,inStock}]
       const DEFAULT_FILAMENTS = [
@@ -1154,59 +1186,9 @@
         { id: "pla",         name: "PLA (пример)",        image: "images/filament/pla.jpg",           inStock: false }
       ];
 
-      // --- stock + item normalization ---
-      function toBool(v) {
-        if (typeof v === 'boolean') return v;
-        if (typeof v === 'number') return v > 0;
-        if (typeof v === 'string') {
-          const s = v.trim().toLowerCase();
-          if (['1','true','yes','y','on','available','instock','in','есть','в наличии'].includes(s)) return true;
-          if (['0','false','no','n','off','preorder','out','unavailable','нет','под заказ'].includes(s)) return false;
-        }
-        return Boolean(v);
-      }
-
-      function normalizeFilament(it, idx) {
-        const rawStock = it?.inStock ?? it?.instock ?? it?.in_stock ?? it?.available ?? it?.isAvailable ?? it?.stock ?? it?.qty ?? it?.quantity;
-        return {
-          id: (it?.id ?? it?.slug ?? it?.code ?? ('f' + idx)).toString(),
-          name: (it?.name ?? it?.title ?? ('Филамент ' + (idx + 1))).toString(),
-          image: (it?.image ?? it?.img ?? it?.photo ?? 'images/filament/placeholder.jpg').toString(),
-          inStock: toBool(rawStock),
-          specs: Array.isArray(it?.specs) ? it.specs : []
-        };
-      }
-
-      async function loadFilamentsFromJson() {
-        const urls = ['content/filament.json', '/content/filament.json'];
-        for (const base of urls) {
-          try {
-            const res = await fetch(base + '?ts=' + Date.now(), { cache: 'no-store' });
-            if (!res.ok) continue;
-            const data = await res.json();
-            const items = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : (Array.isArray(data.filaments) ? data.filaments : []));
-            if (!items.length) continue;
-            return items.map(normalizeFilament);
-          } catch (e) {
-            // ignore
-          }
-        }
-        return null;
-      }
-
-
-      
-      const fromAdminRaw = window.FILAMENTS_FROM_ADMIN;
-      const fromAdmin = (Array.isArray(fromAdminRaw) && fromAdminRaw.length) ? fromAdminRaw.map(normalizeFilament) : null;
-
-      let filaments = fromAdmin || DEFAULT_FILAMENTS.map(normalizeFilament);
-
-      // If admin didn't inject array, try JSON file updated by admin-panel
-      if (!fromAdmin) {
-        const fromJson = await loadFilamentsFromJson();
-        if (fromJson && fromJson.length) filaments = fromJson;
-      }
-
+      const filaments = Array.isArray(window.FILAMENTS_FROM_ADMIN) && window.FILAMENTS_FROM_ADMIN.length
+        ? window.FILAMENTS_FROM_ADMIN
+        : DEFAULT_FILAMENTS;
 
       const viewport = document.getElementById("fcViewport");
       const dotsWrap = document.getElementById("fcDots");
@@ -1247,6 +1229,17 @@
           item.appendChild(name);
           item.appendChild(status);
           item.appendChild(sub);
+
+          const addBtn = document.createElement('button');
+          addBtn.type = 'button';
+          addBtn.className = 'fc-add';
+          addBtn.textContent = 'Добавить в заявку';
+          addBtn.addEventListener('click', () => {
+            setSelectedFilament(f);
+            const contacts = document.querySelector('#contacts');
+            if (contacts) contacts.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          item.appendChild(addBtn);
 
           viewport.appendChild(item);
 
@@ -1293,7 +1286,7 @@
       window.setFilamentStatus = function(id, inStock) {
         const f = filaments.find(x => x.id === id);
         if (!f) return false;
-        f.inStock = toBool(inStock);
+        f.inStock = Boolean(inStock);
         render();
         return true;
       };
@@ -1304,4 +1297,3 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </body>
 </html>
-
