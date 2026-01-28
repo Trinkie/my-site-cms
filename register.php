@@ -13,13 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $err = 'Пароль минимум 6 символов.';
   } else {
     $hash = password_hash($pass, PASSWORD_DEFAULT);
+
     try {
       $st = db()->prepare('INSERT INTO users (email, pass_hash, name) VALUES (?, ?, ?)');
       $st->execute([$email, $hash, $name !== '' ? $name : null]);
       header('Location: login.php?registered=1');
       exit;
     } catch (PDOException $e) {
-      $err = 'Такой email уже зарегистрирован.';
+      // Показываем реальную причину (на время!)
+      $err = 'Ошибка БД: ' . $e->getMessage();
     }
   }
 }
@@ -57,4 +59,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <p>Уже есть аккаунт? <a href="login.php">Войти</a></p>
 </body>
 </html>
-
