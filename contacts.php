@@ -1,64 +1,133 @@
 <?php
 require __DIR__ . '/config.php';
 
-$authLinksHtml = auth_links_html();
-
 $user = current_user();
 $createdId = null;
 $err = '';
 $ok = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!$user) {
-    header('Location: login.php');
-    exit;
+function ensure_dir(string $dir): void {
+  if (!is_dir($dir)) mkdir($dir, 0755, true);
+}
+
+function safe_ext(string $name): string {
+  $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+  return preg_replace('/[^a-z0-9]/', '', $ext);
+}
+
+function safe_name(string $name): string {
+  $base = strtolower(pathinfo($name, PATHINFO_FILENAME));
+  $base = preg_replace('/[^a-z0-9_\-]+/i', '_', $base);
+  $base = trim($base, '_');
+  return $base !== '' ? $base : 'file';
+}
+
+function upload_one(string $field, array $allowedExt, string $dstDir, string $prefix): ?string {
+  if (empty($_FILES[$field]) || !isset($_FILES[$field]['tmp_name'])) return null;
+  if ((int)$_FILES[$field]['error'] !== UPLOAD_ERR_OK) return null;
+
+  $ext = safe_ext((string)$_FILES[$field]['name']);
+  if (!in_array($ext, $allowedExt, true)) return null;
+
+  $dst = rtrim($dstDir, '/') . '/' . $prefix . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+  if (!move_uploaded_file((string)$_FILES[$field]['tmp_name'], $dst)) return null;
+  return $dst;
+}
+
+function upload_multi(string $field, array $allowedExt, string $dstDir, string $prefix): array {
+  $out = [];
+  if (empty($_FILES[$field]) || !isset($_FILES[$field]['name']) || !is_array($_FILES[$field]['name'])) return $out;
+
+  $names = $_FILES[$field]['name'];
+  $tmps  = $_FILES[$field]['tmp_name'];
+  $errs  = $_FILES[$field]['error'];
+
+  for ($i=0; $i<count($names); $i++) {
+    if ((int)$errs[$i] !== UPLOAD_ERR_OK) continue;
+    $ext = safe_ext((string)$names[$i]);
+    if (!in_array($ext, $allowedExt, true)) continue;
+
+    $dst = rtrim($dstDir, '/') . '/' . $prefix . '_' . safe_name((string)$names[$i]) . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+    if (move_uploaded_file((string)$tmps[$i], $dst)) $out[] = $dst;
   }
+  return $out;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (!$user) { header('Location: login.php'); exit; }
 
   if (!csrf_check($_POST['csrf'] ?? null)) {
     $err = 'Сессия устарела. Обновите страницу и попробуйте снова.';
   } else {
-    $client_contact = trim((string)($_POST['client_contact'] ?? ''));
     $task_desc = trim((string)($_POST['task_desc'] ?? ''));
     $request_type = (string)($_POST['request_type'] ?? 'modeling');
 
     $filament_id = trim((string)($_POST['filament_id'] ?? ''));
     $filament_name = trim((string)($_POST['filament_name'] ?? ''));
 
-    $material = trim((string)($_POST['material'] ?? ''));
     $strength_needed = isset($_POST['strength_needed']) ? 1 : 0;
 
-    if ($client_contact === '' || $task_desc === '') {
-      $err = 'Заполните контакт и описание задачи.';
+    if ($task_desc === '') {
+      $err = 'Заполните описание задачи.';
     } elseif ($filament_id === '' || $filament_name === '') {
       $err = 'Выберите филамент перед созданием заказа.';
     } else {
-      // title: короткое описание заказа
+      // create order row first (to get id for folder)
       $title = mb_substr($task_desc, 0, 240);
-
-      // status: "queue" сразу после создания
       $status = 'queue';
-
-      // комментарий — сохраняем "тип запроса" (и всё доп. можно дописывать вручную в админке)
       $comment = "Тип запроса: {$request_type}";
 
       $st = db()->prepare('
-        INSERT INTO orders (user_id, title, status, comment, filament_id, filament_name, material, strength_needed, client_contact)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (user_id, title, status, comment, filament_id, filament_name, strength_needed)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       ');
       $st->execute([
         (int)$user['id'],
         $title,
         $status,
         $comment,
-        $filament_id !== '' ? $filament_id : null,
-        $filament_name !== '' ? $filament_name : null,
-        $material !== '' ? $material : null,
+        $filament_id,
+        $filament_name,
         (int)$strength_needed,
-        $client_contact !== '' ? $client_contact : null,
       ]);
 
       $createdId = (int)db()->lastInsertId();
-      $ok = "Заказ создан: #{$createdId}. Статус: " . status_label($status) . ".";
+
+      // upload files into per-order folder
+      $baseDir = __DIR__ . '/uploads/orders/' . $createdId;
+      ensure_dir($baseDir);
+
+      $modelPath = null;
+      $imgPaths = [];
+
+      if ($request_type === 'print') {
+        // model required
+        $modelPath = upload_one('modelFile', ['stl','stp','step'], $baseDir, 'model');
+        if (!$modelPath) {
+          // rollback the order if file missing/invalid
+          db()->prepare('DELETE FROM orders WHERE id=? AND user_id=?')->execute([$createdId, (int)$user['id']]);
+          $err = 'Для "Печать" нужно прикрепить STL/STP/STEP файл (валидный).';
+          $createdId = null;
+        }
+      } else {
+        // images/pdf optional
+        $imgPaths = upload_multi('attachmentsImages', ['jpg','jpeg','png','webp','pdf'], $baseDir, 'ref');
+      }
+
+      if (!$err && $createdId) {
+        // store file paths in comment (simple, without extra table)
+        $pathsText = '';
+        if ($modelPath) $pathsText .= "\nФайл модели: " . str_replace(__DIR__ . '/', '', $modelPath);
+        if ($imgPaths) {
+          $pathsText .= "\nВложения:\n- " . implode("\n- ", array_map(fn($p) => str_replace(__DIR__ . '/', '', $p), $imgPaths));
+        }
+        if ($pathsText !== '') {
+          db()->prepare('UPDATE orders SET comment = CONCAT(comment, ?) WHERE id=? AND user_id=?')
+            ->execute([$pathsText, $createdId, (int)$user['id']]);
+        }
+
+        $ok = "Заказ создан: #{$createdId}. Статус: " . status_label($status) . ".";
+      }
     }
   }
 }
@@ -91,23 +160,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($err): ?><div class="msg-err"><?=e($err)?></div><?php endif; ?>
 
         <div class="form-wrap">
-          <form method="post" id="orderForm">
+          <form method="post" id="orderForm" enctype="multipart/form-data">
             <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
-
-            <!-- Hidden: filament from JS/localStorage -->
             <input type="hidden" name="filament_id" id="filament_id" value="">
             <input type="hidden" name="filament_name" id="filament_name" value="">
 
             <div class="form-grid">
               <div class="full">
-                <label class="label">Контакт (Telegram / телефон / email)</label>
-                <input name="client_contact" id="client_contact" type="text" required placeholder="@username / +7..." value="<?=e($_POST['client_contact'] ?? '')?>">
-              </div>
-
-              <div class="full">
                 <label class="label">Описание задачи</label>
                 <textarea name="task_desc" id="task_desc" rows="5" required placeholder="Что нужно сделать? Какие условия/нагрузка/улица/температура?"><?=e($_POST['task_desc'] ?? '')?></textarea>
-                <div class="hint">Если детали нет — можно моделирование по фото/эскизу. Если есть файл — можно печать STL/STP/STEP.</div>
               </div>
 
               <div class="full">
@@ -127,38 +188,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <button type="button" class="btn btn-muted" id="goPickFilamentBtn" style="margin-top:0.8rem">Выбрать филамент</button>
               </div>
 
-              <div class="full">
-                <label class="label">Материал (если нужно)</label>
-                <select name="material" id="material">
-                  <option value="">Не важно (подберём сами)</option>
-                  <option value="absred">ABS</option>
-                  <option value="absplusblack">ABS+</option>
-                </select>
+              <div class="full" id="imagesBlock">
+                <label class="label">Фото/эскизы (необязательно)</label>
+                <div class="file-box">
+                  <div class="file-row">
+                    <input class="file-input" id="attachmentsImages" name="attachmentsImages[]" type="file" multiple accept="image/*,.pdf">
+                  </div>
+                  <div class="hint">Можно прикрепить фото детали, эскиз, чертёж, скрин.</div>
+                </div>
+              </div>
+
+              <div class="full hidden" id="modelBlock">
+                <label class="label">Файл модели (обязательно для “Печать”)</label>
+                <div class="file-box">
+                  <div class="file-row">
+                    <input class="file-input" id="modelFile" name="modelFile" type="file" accept=".stl,.stp,.step" />
+                  </div>
+                  <div class="hint">Загрузите STL/STP/STEP.</div>
+                </div>
               </div>
 
               <div class="full">
                 <label class="choice" style="width:100%; justify-content:flex-start">
                   <input type="checkbox" name="strength_needed" id="strength_needed">
-                  <div><b>Повышенная прочность</b><br><span>Подберём настройки печати (без наценки).</span></div>
+                  <div><b>Повышенная прочность</b><br><span>Подберём настройки печати.</span></div>
                 </label>
               </div>
 
               <div class="full" style="text-align:center">
                 <button type="submit" class="btn">Создать заказ</button>
-                <a class="btn btn-muted" href="profile.php" style="margin-left:0.5rem">Перейти в профиль</a>
+                <a class="btn btn-muted" href="profile.php" style="margin-left:0.5rem">В профиль</a>
               </div>
             </div>
           </form>
         </div>
 
         <script>
-          // restore filament from localStorage (same key as in your JS)
           (function () {
             const view = document.getElementById('selectedFilamentView');
             const hidId = document.getElementById('filament_id');
             const hidName = document.getElementById('filament_name');
             const hint = document.getElementById('filamentHint');
             const btn = document.getElementById('goPickFilamentBtn');
+
+            const imagesBlock = document.getElementById('imagesBlock');
+            const modelBlock = document.getElementById('modelBlock');
+            const modelFile = document.getElementById('modelFile');
 
             function apply(sel) {
               if (sel && sel.id && sel.name) {
@@ -177,15 +252,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
               const raw = localStorage.getItem('selectedFilament');
               apply(raw ? JSON.parse(raw) : null);
-            } catch (e) {
-              apply(null);
+            } catch (e) { apply(null); }
+
+            if (btn) btn.addEventListener('click', () => { window.location.href = 'filament.html'; });
+
+            function updateByType() {
+              const t = document.querySelector('input[name="request_type"]:checked')?.value || 'modeling';
+              if (t === 'print') {
+                imagesBlock.classList.add('hidden');
+                modelBlock.classList.remove('hidden');
+                modelFile.required = true;
+              } else {
+                modelBlock.classList.add('hidden');
+                imagesBlock.classList.remove('hidden');
+                modelFile.required = false;
+              }
             }
 
-            if (btn) btn.addEventListener('click', () => {
-              window.location.href = 'filament.html';
-            });
+            document.querySelectorAll('input[name="request_type"]').forEach(r => r.addEventListener('change', updateByType));
+            updateByType();
 
-            // on submit: ensure filament exists
             document.getElementById('orderForm').addEventListener('submit', (e) => {
               if (!hidId.value || !hidName.value) {
                 e.preventDefault();
