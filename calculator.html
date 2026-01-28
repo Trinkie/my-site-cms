@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3DOPE — Калькулятор</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+  <div class="nav-glass">
+    <nav>
+      <ul>
+        <li><a href="index.html">Главная</a></li>
+        <li><a href="services.html">Услуги</a></li>
+        <li><a href="calculator.html">Калькулятор</a></li>
+        <li><a href="filament.html">Филамент</a></li>
+        <li><a href="advantages.html">Преимущества</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="process.html">Процесс</a></li>
+        <li><a href="contacts.html">Заявка</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <section id="calculator">
+    <div class="card">
+      <h2>Калькулятор печати</h2>
+      <p>
+        Примерная цена <strong>только за печать</strong> копий одной и той же модели (без моделирования).<br>
+        Моделирование считается индивидуально, обычно 800–3000 ₽. После моделирования печать считаем по этому калькулятору.
+      </p>
+
+      <div class="content-grid">
+        <div class="content-item">
+          <div class="calc-grid">
+            <div>
+              <label class="label" for="calcMaterial">Материал</label>
+              <select id="calcMaterial">
+                <option value="abs_red" data-ppg="8">Красный ABS</option>
+                <option value="absplus_black" data-ppg="10">Черный ABS+</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label" for="calcWeightG">Вес одной детали (г)</label>
+              <input id="calcWeightG" type="number" min="0" step="1" value="50" />
+            </div>
+
+            <div>
+              <label class="label" for="calcQty">Количество (шт)</label>
+              <input id="calcQty" type="number" min="1" step="1" value="1" />
+            </div>
+
+            <div>
+              <label class="label" for="calcUrgent">Срочность</label>
+              <select id="calcUrgent">
+                <option value="0">Стандарт</option>
+                <option value="1">Срочно (+700 ₽)</option>
+              </select>
+            </div>
+
+            <div class="full">
+              <label class="choice" style="width:100%; justify-content:flex-start;">
+                <input id="calcStrength" type="checkbox">
+                <div>
+                  <b>Нужна повышенная прочность</b><br>
+                  <span>Без наценки (учтём в настройках печати)</span>
+                </div>
+              </label>
+            </div>
+
+            <div class="full">
+              <div class="calc-kpi">
+                <h4>Итог (печать)</h4>
+
+                <div class="calc-price">
+                  <span id="calcFinal">— ₽</span>
+                  <span id="calcOld" class="hidden">— ₽</span>
+                </div>
+
+                <div class="calc-sub" id="calcSub">—</div>
+
+                <div style="text-align:center;">
+                  <button type="button" class="btn" id="calcToFormBtn">Перенести в заявку</button>
+                </div>
+              </div>
+
+              <div class="calc-note">
+                В цену добавляется: +400 ₽ за модель (подготовка/запуск). Скидка 10/50/100 шт применяется к печати (не к доплатам).
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <a href="contacts.html" class="btn">Перейти к заявке</a>
+    </div>
+  </section>
+
+  <script src="assets/app.js"></script>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</body>
+</html>
