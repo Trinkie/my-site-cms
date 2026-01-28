@@ -1,5 +1,7 @@
 <?php
-// expects: $authLinksHtml (string) - already built by page
+// nav.php should be self-contained
+// requires config.php already included by the page
+$authLinksHtml = function_exists('auth_links_html') ? auth_links_html() : '<li><a href="login.php">Войти</a></li><li><a href="register.php">Регистрация</a></li>';
 ?>
 <div class="nav-glass">
   <nav>
