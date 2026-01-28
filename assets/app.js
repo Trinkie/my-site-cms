@@ -1,3 +1,9 @@
+// =====================
+// 3DOPE multi-page JS
+// - Persists selected filament via localStorage
+// - Safe init: code runs only when elements exist
+// =====================
+
 // ===== Helpers =====
 function setFilesList(target, files) {
   if (!target) return;
@@ -9,6 +15,31 @@ function setFilesList(target, files) {
     div.textContent = `${f.name} (${Math.round(f.size / 1024)} KB)`;
     target.appendChild(div);
   });
+}
+
+// ===== Filament persistence =====
+const FILAMENT_STORAGE_KEY = 'selectedFilament';
+
+function saveSelectedFilamentToStorage(sel) {
+  try {
+    if (sel && sel.id && sel.name) {
+      localStorage.setItem(FILAMENT_STORAGE_KEY, JSON.stringify({ id: String(sel.id), name: String(sel.name) }));
+    } else {
+      localStorage.removeItem(FILAMENT_STORAGE_KEY);
+    }
+  } catch (e) {}
+}
+
+function loadSelectedFilamentFromStorage() {
+  try {
+    const raw = localStorage.getItem(FILAMENT_STORAGE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj && obj.id && obj.name) return { id: String(obj.id), name: String(obj.name) };
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
 // ===== Form + Filament select =====
@@ -30,12 +61,13 @@ function setFilesList(target, files) {
   const modelList = document.getElementById('modelList');
 
   // Filament -> form (single select)
-  window.__selectedFilament = window.__selectedFilament || null;
+  window.__selectedFilament = loadSelectedFilamentFromStorage(); // <-- restore on page load
   const selectedFilamentName = document.getElementById('selectedFilamentName');
   const selectedFilamentId = document.getElementById('selectedFilamentId');
   const selectedFilamentHint = document.getElementById('selectedFilamentHint');
   const goPickFilamentBtn = document.getElementById('goPickFilamentBtn');
 
+  // Expose to carousel page too (it will call these if present)
   window.syncFilamentUI = function syncFilamentUI() {
     const selId = window.__selectedFilament && window.__selectedFilament.id;
     document.querySelectorAll('#filament .fc-item').forEach(card => {
@@ -53,15 +85,24 @@ function setFilesList(target, files) {
 
   window.setSelectedFilament = function setSelectedFilament(f) {
     window.__selectedFilament = f ? { id: String(f.id), name: String(f.name) } : null;
+    saveSelectedFilamentToStorage(window.__selectedFilament);
+
     if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
     if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
     if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Не выбран.';
+
     if (typeof window.syncFilamentUI === 'function') window.syncFilamentUI();
   };
 
+  // Paint restored filament into UI (contacts.html)
+  if (window.__selectedFilament) {
+    if (selectedFilamentName) selectedFilamentName.value = window.__selectedFilament.name;
+    if (selectedFilamentId) selectedFilamentId.value = window.__selectedFilament.id;
+    if (selectedFilamentHint) selectedFilamentHint.textContent = `Выбран: ${window.__selectedFilament.name}`;
+  }
+
   if (goPickFilamentBtn) {
     goPickFilamentBtn.addEventListener('click', () => {
-      // на многостраничнике ведём на страницу филамента
       window.location.href = 'filament.html';
     });
   }
@@ -82,7 +123,8 @@ function setFilesList(target, files) {
     }
 
     if (type === 'full') {
-      if (attachmentsHint) attachmentsHint.textContent = 'Прикрепите фото сломанной детали/эскиз/чертеж/деталь, к которой должна крепиться';
+      if (attachmentsHint) attachmentsHint.textContent =
+        'Прикрепите фото сломанной детали/эскиз/чертеж/деталь, к которой должна крепиться';
       materialsBlock.classList.remove('hidden');
       strengthBlock.classList.remove('hidden');
     }
@@ -121,7 +163,6 @@ function setFilesList(target, files) {
 
     if (!window.__selectedFilament || !window.__selectedFilament.id) {
       alert('Перед отправкой заявки нужно выбрать филамент.');
-      // на многостраничнике ведём на страницу филамента
       window.location.href = 'filament.html';
       return;
     }
@@ -133,9 +174,12 @@ function setFilesList(target, files) {
 
     alert('✅ Запрос принят. Мы свяжемся в течение часа.');
     e.target.reset();
+
     if (typeof window.setSelectedFilament === 'function') window.setSelectedFilament(null);
+
     if (imagesList) imagesList.innerHTML = '';
     if (modelList) modelList.innerHTML = '';
+
     updateFormByType('modeling');
   });
 
@@ -220,7 +264,6 @@ function setFilesList(target, files) {
   }
 
   function pushToForm() {
-    // на многостраничнике просто переходим на contacts.html
     const url = new URL('contacts.html', window.location.href);
     url.searchParams.set('fromCalc', '1');
     url.searchParams.set('material', materialEl.value);
@@ -255,7 +298,6 @@ function setFilesList(target, files) {
   const urgent = params.get('urgent') === '1';
   const strength = params.get('strength') === '1';
 
-  // switch to print type
   const printRadio = document.querySelector('input[name="requestType"][value="print"]');
   if (printRadio) {
     printRadio.checked = true;
@@ -431,7 +473,9 @@ function setFilesList(target, files) {
       addBtn.className = 'fc-add';
       addBtn.textContent = 'Добавить в заявку';
       addBtn.addEventListener('click', () => {
+        // IMPORTANT: persist + then go to contacts
         if (typeof window.setSelectedFilament === 'function') window.setSelectedFilament(f);
+        else saveSelectedFilamentToStorage({ id: f.id, name: f.name });
         window.location.href = 'contacts.html';
       });
 
@@ -451,7 +495,13 @@ function setFilesList(target, files) {
       dotsWrap.appendChild(dot);
     });
 
-    if (typeof window.syncFilamentUI === 'function') window.syncFilamentUI();
+    // highlight selected if any
+    const restored = loadSelectedFilamentFromStorage();
+    if (restored) {
+      window.__selectedFilament = restored;
+      if (typeof window.syncFilamentUI === 'function') window.syncFilamentUI();
+    }
+
     updateActiveDot();
   }
 
