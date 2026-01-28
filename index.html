@@ -3,41 +3,269 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3DOPE - 3D моделирование и печать</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <title>3DOPE - 3D</title>
+  <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
 
   <div class="nav-glass">
     <nav>
-      <ul>
-        <li><a href="index.html">Главная</a></li>
-        <li><a href="services.html">Услуги</a></li>
-        <li><a href="calculator.html">Калькулятор</a></li>
-        <li><a href="filament.html">Филамент</a></li>
-        <li><a href="advantages.html">Преимущества</a></li>
-        <li><a href="faq.html">FAQ</a></li>
-        <li><a href="process.html">Процесс</a></li>
-        <li><a href="contacts.php">Заявка</a></li>
+      <ul class="nav-row">
+        <li><a href="#home">Главная</a></li>
+        <li><a href="#services">Услуги</a></li>
+        <li><a href="#calculator">Калькулятор</a></li>
+        <li><a href="#filament">Филамент</a></li>
+      </ul>
+
+      <ul class="nav-row">
+        <li><a href="#advantages">Преимущества</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#process">Процесс</a></li>
+        <li><a href="contacts.php">Заказ</a></li>
+      </ul>
+
+      <ul class="nav-auth">
+        <li>
+          <a class="nav-ic" href="profile.php" title="Профиль" aria-label="Профиль">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.2 0-7.5 2.2-7.5 5v1h15v-1c0-2.8-3.3-5-7.5-5Z"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="nav-ic nav-ic-exit" href="logout.php" title="Выйти" aria-label="Выйти">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 17v-2h4v2h-4Zm0-4V11h7V9l4 3-4 3v-2h-7ZM4 4h10a2 2 0 0 1 2 2v2h-2V6H4v12h10v-2h2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>
+            </svg>
+          </a>
+        </li>
       </ul>
     </nav>
   </div>
 
+  <!-- 1 -->
   <section id="home">
     <div class="card">
       <h1>3DOPE</h1>
+      <p><strong>500×500×300</strong><br>3D-печать<br><em>Пермь</em></p>
       <p>
-        Пермь. Принтер <strong>500×500×300 мм</strong>.<br>
-        Полное воплощение Ваших идей в 3D.<br>
-        <em>Ваше время — наша забота.</em>
+        <a href="#calculator" class="btn">Калькулятор</a>
+        <a href="contacts.php" class="btn" style="margin-left:0.5rem">Заказ</a>
       </p>
-      <a href="calculator.html" class="btn">Рассчитать стоимость</a>
-      <a href="contacts.html" class="btn" style="margin-left:0.5rem;">Оставить заявку</a>
     </div>
   </section>
 
+  <!-- 2 -->
+  <section id="services">
+    <div class="card">
+      <h2>Услуги</h2>
+      <p>3D-печать и моделирование.</p>
+
+      <div class="content-grid">
+        <div class="content-item">
+          <div class="service-price">2000₽</div>
+          <div class="service-title">3D‑моделирование</div>
+          <div class="service-desc">Создание модели по фото/эскизу/чертежу.</div>
+        </div>
+
+        <div class="content-item">
+          <div class="service-price">1200₽</div>
+          <div class="service-title">3D‑печать</div>
+          <div class="service-desc"><strong>500×500×300</strong><br>ABS / ABS+<br><strong>STL/STP/STEP</strong></div>
+        </div>
+
+        <div class="content-item">
+          <div class="service-price">800₽</div>
+          <div class="service-title">3D‑консультация</div>
+          <div class="service-desc">Подбор материала, прочности, технологии.</div>
+        </div>
+
+        <div style="text-align:center">
+          <a href="contacts.php" class="btn">Создать заказ</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="calculator">
+    <div class="card">
+      <h2>Калькулятор</h2>
+      <p><strong>Быстрый расчет стоимости</strong><br>Обычно 800–3000₽ за деталь.</p>
+
+      <div class="content-grid">
+        <div class="content-item">
+          <div class="calc-grid">
+            <div>
+              <label class="label" for="calcMaterial">Материал</label>
+              <select id="calcMaterial">
+                <option value="absred" data-ppg="8">ABS</option>
+                <option value="absplusblack" data-ppg="10">ABS+</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label" for="calcWeightG">Вес (г)</label>
+              <input id="calcWeightG" type="number" min="0" step="1" value="50">
+            </div>
+
+            <div>
+              <label class="label" for="calcQty">Количество</label>
+              <input id="calcQty" type="number" min="1" step="1" value="1">
+            </div>
+
+            <div>
+              <label class="label" for="calcUrgent">Срочно</label>
+              <select id="calcUrgent">
+                <option value="0">Нет</option>
+                <option value="1">Да (+700)</option>
+              </select>
+            </div>
+
+            <div class="full">
+              <label class="choice" style="width:100%; justify-content:flex-start">
+                <input id="calcStrength" type="checkbox">
+                <div><b>Повышенная прочность</b><br><span>Подберем настройки печати</span></div>
+              </label>
+            </div>
+
+            <div class="full">
+              <div class="calc-kpi">
+                <h4>Итого</h4>
+                <div class="calc-price">
+                  <span id="calcFinal">—</span>
+                  <span id="calcOld" class="hidden">—</span>
+                </div>
+                <div class="calc-sub" id="calcSub"></div>
+              </div>
+            </div>
+
+            <div class="full" style="text-align:center">
+              <button type="button" class="btn" id="calcToFormBtn">Перейти к заказу</button>
+            </div>
+          </div>
+
+          <div class="calc-note">
+            Минимальная стоимость заказа: 1200₽. Минимум за деталь: 400₽. Моделирование в расчёт не входит.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="filament">
+    <div class="card">
+      <h2>Филамент</h2>
+      <p>Выберите пластик перед созданием заказа.</p>
+
+      <div class="content-grid">
+        <div class="content-item">
+          <div class="filament-carousel">
+            <button class="fc-btn" id="fcPrev" type="button" aria-label="Назад">‹</button>
+            <div class="fc-viewport" id="fcViewport" aria-label="Список филамента"></div>
+            <button class="fc-btn" id="fcNext" type="button" aria-label="Вперёд">›</button>
+          </div>
+          <div class="fc-dots" id="fcDots" aria-label="Точки"></div>
+          <div class="hint" style="text-align:left;margin-top:0.8rem">
+            После выбора филамента нажмите “Заказ” в меню.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="advantages" style="min-height:80vh;padding:170px 20px 60px">
+    <div class="card">
+      <h2>Преимущества</h2>
+      <p>Быстро, аккуратно, с контролем качества.</p>
+      <div class="advantages-grid">
+        <div class="advantage-item">
+          <div class="advantage-icon">✓</div>
+          <div class="advantage-title">Качество</div>
+          <div class="advantage-desc">Проверка геометрии и посадки.</div>
+        </div>
+        <div class="advantage-item">
+          <div class="advantage-icon">⏱</div>
+          <div class="advantage-title">Скорость</div>
+          <div class="advantage-desc">Быстрая печать и запуск в работу.</div>
+        </div>
+        <div class="advantage-item">
+          <div class="advantage-icon">🧩</div>
+          <div class="advantage-title">Большой стол</div>
+          <div class="advantage-desc">500×500×300 мм.</div>
+        </div>
+        <div class="advantage-item">
+          <div class="advantage-icon">🧵</div>
+          <div class="advantage-title">eSUN</div>
+          <div class="advantage-desc">Пластики и цвета в наличии.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="faq">
+    <div class="card">
+      <h2>FAQ</h2>
+      <p>Частые вопросы.</p>
+      <div class="faq">
+        <details><summary>Какие форматы файлов?</summary><p>STL/STP/STEP — для печати, фото/эскизы — для моделирования.</p></details>
+        <details><summary>Какая цена?</summary><p>Обычно 800–3000₽ за деталь, зависит от веса и сложности.</p></details>
+        <details><summary>Можно срочно?</summary><p>Да, есть доплата за срочность.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="process">
+    <div class="card">
+      <h2>Процесс</h2>
+      <p>Как это происходит.</p>
+
+      <div class="process-container">
+        <div class="process-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Заказ</h3>
+            <p>Вы выбираете филамент и создаёте заказ.</p>
+          </div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Подтверждение</h3>
+            <p>Уточняем детали и требования.</p>
+          </div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Печать</h3>
+            <p>Запуск в очередь и печать.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="contacts.php" class="btn">Создать заказ</a>
+    </div>
+  </section>
+
+  <script>
+    // Smooth anchors
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click',e=>{
+        const id=a.getAttribute('href');
+        if(!id||id==='#')return;
+        const el=document.querySelector(id);
+        if(!el)return;
+        e.preventDefault();
+        el.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+    });
+  </script>
+
   <script src="assets/app.js"></script>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </body>
 </html>
-
