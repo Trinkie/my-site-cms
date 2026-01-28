@@ -1,27 +1,35 @@
 <?php
 require __DIR__ . '/config.php';
 
+$authLinksHtml = auth_links_html();
 $err = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim((string)($_POST['email'] ?? ''));
-  $name  = trim((string)($_POST['name'] ?? ''));
-  $pass  = (string)($_POST['password'] ?? '');
-
-  if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $err = 'Введите корректный email.';
-  } elseif (mb_strlen($pass) < 6) {
-    $err = 'Пароль минимум 6 символов.';
+  if (!csrf_check($_POST['csrf'] ?? null)) {
+    $err = 'Сессия устарела. Обновите страницу и попробуйте снова.';
   } else {
-    $hash = password_hash($pass, PASSWORD_DEFAULT);
+    $email = trim((string)($_POST['email'] ?? ''));
+    $name  = trim((string)($_POST['name'] ?? ''));
+    $pass  = (string)($_POST['password'] ?? '');
 
-    try {
-      $st = db()->prepare('INSERT INTO users (email, pass_hash, name) VALUES (?, ?, ?)');
-      $st->execute([$email, $hash, $name !== '' ? $name : null]);
-      header('Location: login.php?registered=1');
-      exit;
-    } catch (PDOException $e) {
-      // Показываем реальную причину (на время!)
-      $err = 'Ошибка БД: ' . $e->getMessage();
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $err = 'Введите корректный email.';
+    } elseif (mb_strlen($pass) < 6) {
+      $err = 'Пароль минимум 6 символов.';
+    } else {
+      $hash = password_hash($pass, PASSWORD_DEFAULT);
+      try {
+        $st = db()->prepare('INSERT INTO users (email, pass_hash, name) VALUES (?, ?, ?)');
+        $st->execute([$email, $hash, $name !== '' ? $name : null]);
+        header('Location: login.php?registered=1');
+        exit;
+      } catch (PDOException $e) {
+        // 1062 Duplicate entry
+        $msg = $e->getMessage();
+        $err = (str_contains($msg, '1062') || str_contains($msg, 'Duplicate'))
+          ? 'Такой email уже зарегистрирован.'
+          : 'Ошибка сервера. Попробуйте позже.';
+      }
     }
   }
 }
@@ -31,31 +39,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Регистрация</title>
-  <style>
-    body{font-family:Arial,sans-serif;max-width:520px;margin:40px auto;padding:0 16px}
-    input,button{width:100%;padding:12px;margin:8px 0}
-    .err{background:#ffe2e2;padding:10px;border-radius:8px}
-    a{color:#00AE42}
-  </style>
+  <title>3DOPE — Регистрация</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <h1>Регистрация</h1>
-  <?php if ($err): ?><div class="err"><?=e($err)?></div><?php endif; ?>
+  <?php include __DIR__ . '/partials/nav.php'; ?>
 
-  <form method="post">
-    <label>Email</label>
-    <input name="email" type="email" required value="<?=e($_POST['email'] ?? '')?>">
+  <section>
+    <div class="card">
+      <h2>Регистрация</h2>
+      <p>Создайте аккаунт, чтобы оформлять заказы и отслеживать статус.</p>
 
-    <label>Имя (необязательно)</label>
-    <input name="name" type="text" value="<?=e($_POST['name'] ?? '')?>">
+      <?php if ($err): ?><div class="msg-err"><?=e($err)?></div><?php endif; ?>
 
-    <label>Пароль</label>
-    <input name="password" type="password" required>
+      <div class="form-wrap">
+        <form method="post">
+          <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
+          <div class="form-grid">
+            <div class="full">
+              <label class="label">Email</label>
+              <input name="email" type="email" required value="<?=e($_POST['email'] ?? '')?>">
+            </div>
 
-    <button type="submit">Создать аккаунт</button>
-  </form>
+            <div class="full">
+              <label class="label">Имя (необязательно)</label>
+              <input name="name" type="text" value="<?=e($_POST['name'] ?? '')?>">
+            </div>
 
-  <p>Уже есть аккаунт? <a href="login.php">Войти</a></p>
+            <div class="full">
+              <label class="label">Пароль</label>
+              <input name="password" type="password" required>
+              <div class="hint">Минимум 6 символов.</div>
+            </div>
+
+            <div class="full" style="text-align:center">
+              <button type="submit" class="btn">Создать аккаунт</button>
+              <a class="btn btn-muted" href="login.php" style="margin-left:0.5rem">Уже есть аккаунт</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
 </body>
 </html>
