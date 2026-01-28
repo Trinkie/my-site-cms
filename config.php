@@ -12,7 +12,7 @@ session_start();
 const DB_HOST = 'localhost';
 const DB_NAME = 'ca091776_trinkie';
 const DB_USER = 'ca091776_trinkie';
-const DB_PASS = 'Zehopa40_';
+const DB_PASS = 'Zehopa40';
 
 function db(): PDO {
   static $pdo = null;
