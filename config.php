@@ -10,9 +10,9 @@ ini_set('session.cookie_httponly', '1'); // норм защита от XSS-во�
 session_start();
 
 const DB_HOST = 'localhost';
-const DB_NAME = 'YOUR_DB_NAME';
-const DB_USER = 'YOUR_DB_USER';
-const DB_PASS = 'YOUR_DB_PASS';
+const DB_NAME = 'ca091776_trinkie';
+const DB_USER = 'ca091776_trinkie';
+const DB_PASS = 'Zehopa40_';
 
 function db(): PDO {
   static $pdo = null;
