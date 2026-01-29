@@ -1,429 +1,324 @@
-(function () {
-  // ========== NAV COLLAPSE (mobile arrow) ==========
-  (function navCollapse() {
-    const nav = document.querySelector('.nav-glass');
-    const btn = document.getElementById('navToggle');
-    if (!nav || !btn) return;
-
-    const KEY = 'nav_collapsed';
-
-    function apply(collapsed) {
-      nav.classList.toggle('is-collapsed', collapsed);
-      btn.textContent = collapsed ? '›' : '‹';
-      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-
-    apply(localStorage.getItem(KEY) === '1');
-
-    btn.addEventListener('click', () => {
-      const next = !nav.classList.contains('is-collapsed');
-      localStorage.setItem(KEY, next ? '1' : '0');
-      apply(next);
-    });
-  })();
-
-  // ========== NETLIFY IDENTITY (persist login + show logout button) ==========
-  (function identity() {
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    function syncAuthUI() {
-      const has = window.netlifyIdentity && window.netlifyIdentity.currentUser();
-      if (logoutBtn) logoutBtn.style.display = has ? '' : 'none';
-    }
-
-    if (window.netlifyIdentity) {
-      window.netlifyIdentity.on('init', syncAuthUI);
-      window.netlifyIdentity.on('login', syncAuthUI);
-      window.netlifyIdentity.on('logout', syncAuthUI);
-      window.netlifyIdentity.init();
-    }
-
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (window.netlifyIdentity) window.netlifyIdentity.logout();
-      });
-    }
-
-    window.addEventListener('load', syncAuthUI);
-  })();
-
-  // ========== ORDER WIZARD ==========
-  (function orderWizard() {
-    const form = document.getElementById('orderWizard');
-    if (!form) return;
-
-    const stages = Array.from(form.querySelectorAll('.wiz-stage'));
-    const btnPrev = document.getElementById('prevStage');
-    const btnNext = document.getElementById('nextStage');
-    const stageText = document.getElementById('stageText');
-
-    const filesInput = document.getElementById('filesInput');
-    const filesLabel = document.getElementById('filesLabel');
-    const filesHint = document.getElementById('filesHint');
-    const filesList = document.getElementById('filesList');
-
-    const filamentStage = document.getElementById('filamentStage');
-
-    function setFilesList(target, files) {
-      target.innerHTML = '';
-      if (!files || files.length === 0) return;
-      [...files].forEach((f) => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.textContent = `${f.name} (${Math.round(f.size / 1024)} KB)`;
-        target.appendChild(div);
-      });
-    }
-
-    function getServiceType() {
-      const el = form.querySelector('input[name="serviceType"]:checked');
-      return el ? el.value : null;
-    }
-
-    function stageSequence() {
-      const t = getServiceType();
-      const seq = [1, 2];
-      if (t === 'print' || t === 'full') seq.push(3);
-      seq.push(4);
-      return seq;
-    }
-
-    let seq = stageSequence();
-    let idx = 0;
-
-    function showStage() {
-      seq = stageSequence();
-      if (idx >= seq.length) idx = seq.length - 1;
-
-      const cur = seq[idx];
-      const total = seq.length;
-
-      stages.forEach((s) => {
-        const n = Number(s.dataset.stage);
-        s.classList.toggle('hidden', n !== cur);
-      });
-
-      if (stageText) stageText.textContent = `Шаг ${idx + 1} из ${total}`;
-
-      if (btnPrev) btnPrev.disabled = idx === 0;
-      if (btnNext) btnNext.style.display = (idx === total - 1) ? 'none' : '';
-
-      // show/hide filament stage container (just in case)
-      if (filamentStage) filamentStage.classList.toggle('hidden', cur !== 3);
-
-      // submit shown only at stage 4
-      const submitWrap = document.getElementById('submitWrap');
-      if (submitWrap) submitWrap.classList.toggle('hidden', cur !== 4);
-    }
-
-    function validateCurrentStage() {
-      const curStageNum = seq[idx];
-      const curStageEl = form.querySelector(`.wiz-stage[data-stage="${curStageNum}"]`);
-      if (!curStageEl) return true;
-
-      // validate required fields only inside current stage
-      const els = Array.from(curStageEl.querySelectorAll('input, textarea, select'));
-      for (const el of els) {
-        if (el.required && !el.checkValidity()) {
-          el.reportValidity();
-          return false;
-        }
-      }
-
-      // validate filament on stage 3
-      if (curStageNum === 3) {
-        const id = document.getElementById('selectedFilamentId')?.value;
-        if (!id) {
-          alert('Выберите филамент.');
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    function syncFilesByType() {
-      const t = getServiceType();
-      if (!t) return;
-
-      // reset selection when type changes
-      if (filesInput) filesInput.value = '';
-      if (filesList) setFilesList(filesList, null);
-
-      // set requirements
-      if (t === 'full' || t === 'modeling') {
-        filesLabel.textContent = 'Эскизы / чертежи / фото детали';
-        filesHint.textContent = 'Прикрепите эскиз/чертёж/фото. Можно несколько файлов.';
-        filesInput.accept = 'image/*,.pdf';
-        filesInput.multiple = true;
-        filesInput.required = true;
-      }
-
-      if (t === 'print') {
-        filesLabel.textContent = 'Файл модели (STL / STP / STEP)';
-        filesHint.textContent = 'Прикрепите файл STL/STP/STEP.';
-        filesInput.accept = '.stl,.stp,.step';
-        filesInput.multiple = false;
-        filesInput.required = true;
-      }
-
-      // stage sequence may change (print/full adds filament stage)
-      showStage();
-    }
-
-    // event: service type change
-    form.querySelectorAll('input[name="serviceType"]').forEach((r) => {
-      r.addEventListener('change', syncFilesByType);
-    });
-
-    // files list
-    if (filesInput) {
-      filesInput.addEventListener('change', () => {
-        setFilesList(filesList, filesInput.files);
-      });
-    }
-
-    // next/prev buttons
-    if (btnNext) {
-      btnNext.addEventListener('click', () => {
-        if (!validateCurrentStage()) return;
-        idx = Math.min(idx + 1, stageSequence().length - 1);
-        showStage();
-      });
-    }
-
-    if (btnPrev) {
-      btnPrev.addEventListener('click', () => {
-        idx = Math.max(idx - 1, 0);
-        showStage();
-      });
-    }
-
-    // ========== FILAMENT CAROUSEL (same logic as old) ==========
-    window.selectedFilament = null;
-
-    const selectedFilamentName = document.getElementById('selectedFilamentName');
-    const selectedFilamentId = document.getElementById('selectedFilamentId');
-    const selectedFilamentHint = document.getElementById('selectedFilamentHint');
-
-    function toBool(v) {
-      if (typeof v === 'boolean') return v;
-      if (typeof v === 'number') return v !== 0;
-      if (typeof v === 'string') {
-        const s = v.trim().toLowerCase();
-        if (s.includes('out')) return false;
-        if (['1','true','yes','y','on','available','instock','in'].includes(s)) return true;
-        if (['0','false','no','n','off','preorder','unavailable'].includes(s)) return false;
-      }
-      return Boolean(v);
-    }
-
-    function normalizeFilament(it, idx) {
-      const rawStock =
-        it?.inStock ?? it?.instock ?? it?.isInStock ?? it?.available ?? it?.status ?? it?.stock ?? it?.qty ?? it?.quantity;
-
-      return {
-        id: String(it?.id ?? it?.slug ?? it?.code ?? `f${idx}`),
-        name: String(it?.name ?? it?.title ?? `Filament ${idx + 1}`),
-        image: String(it?.image ?? it?.img ?? it?.photo ?? ''),
-        inStock: toBool(rawStock)
-      };
-    }
-
-    function parseItems(any) {
-      try {
-        const v = (typeof any === 'string') ? JSON.parse(any) : any;
-        if (Array.isArray(v)) return v;
-        if (Array.isArray(v?.items)) return v.items;
-        if (Array.isArray(v?.filaments)) return v.filaments;
-        return null;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    async function loadFilamentsFromJson() {
-      const urls = [
-        'content/filament.json','content/filaments.json',
-        'filament.json','filaments.json'
-      ];
-      for (const base of urls) {
-        try {
-          const url = new URL(base, window.location.href);
-          url.searchParams.set('ts', String(Date.now()));
-          const res = await fetch(url.toString(), { cache: 'no-store' });
-          if (!res.ok) continue;
-          const data = await res.json();
-          const items = parseItems(data);
-          if (items && items.length) return items.map(normalizeFilament);
-        } catch (e) {}
-      }
-      return null;
-    }
-
-    function syncFilamentUI() {
-      const selId = window.selectedFilament?.id;
-      document.querySelectorAll('.fc-item').forEach(card => {
-        const fid = card.getAttribute('data-fid');
-        const btn = card.querySelector('.fc-add');
-        const isSel = selId && fid === selId;
-        card.classList.toggle('selected', Boolean(isSel));
-        if (btn) {
-          btn.classList.toggle('is-selected', Boolean(isSel));
-          btn.textContent = isSel ? 'Выбрано' : 'Выбрать';
-          btn.disabled = Boolean(isSel);
-        }
-      });
-    }
-
-    function setSelectedFilament(f) {
-      window.selectedFilament = f ? { id: String(f.id), name: String(f.name) } : null;
-
-      if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
-      if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
-      if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Филамент не выбран.';
-
-      syncFilamentUI();
-    }
-
-    async function initFilamentCarousel() {
-      const viewport = document.getElementById('fcViewport');
-      const dotsWrap = document.getElementById('fcDots');
-      const prevBtn = document.getElementById('fcPrev');
-      const nextBtn = document.getElementById('fcNext');
-
-      if (!viewport || !dotsWrap || !prevBtn || !nextBtn) return;
-
-      const adminRaw = window.FILAMENTSFROMADMIN ?? window.FILAMENTS ?? window.filaments;
-      const adminItems = parseItems(adminRaw);
-
-      let filaments = (adminItems && adminItems.length) ? adminItems.map(normalizeFilament) : null;
-      if (!filaments || filaments.length === 0) filaments = await loadFilamentsFromJson();
-
-      if (!Array.isArray(filaments) || filaments.length === 0) {
-        viewport.innerHTML = '<div class="hint">Нет списка филаментов. Добавьте content/filament.json</div>';
-        dotsWrap.innerHTML = '';
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
-        return;
-      }
-
-      function getItemStepPx() {
-        const first = viewport.querySelector('.fc-item');
-        if (!first) return viewport.clientWidth;
-        const style = getComputedStyle(viewport);
-        const gap = parseFloat(style.columnGap || style.gap || '0') || 0;
-        return first.getBoundingClientRect().width + gap;
-      }
-
-      function scrollToIndex(index) {
-        const idx = Math.max(0, Math.min(filaments.length - 1, index));
-        const step = getItemStepPx();
-        viewport.scrollTo({ left: step * idx, behavior: 'smooth' });
-      }
-
-      function currentIndex() {
-        const step = getItemStepPx();
-        if (!step) return 0;
-        return Math.max(0, Math.min(filaments.length - 1, Math.round(viewport.scrollLeft / step)));
-      }
-
-      function updateActiveDot() {
-        const idx = currentIndex();
-        dotsWrap.querySelectorAll('.fc-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-      }
-
-      function render() {
-        viewport.innerHTML = '';
-        dotsWrap.innerHTML = '';
-
-        filaments.forEach((f, idx) => {
-          const item = document.createElement('div');
-          item.className = 'fc-item';
-          item.dataset.index = String(idx);
-          item.setAttribute('data-fid', String(f.id));
-
-          const img = document.createElement('img');
-          img.className = 'fc-img';
-          img.alt = f.name;
-          img.src = f.image || 'images/filament/placeholder.jpg';
-          img.loading = 'lazy';
-          img.onerror = () => { img.style.opacity = '0.15'; };
-
-          const name = document.createElement('div');
-          name.className = 'fc-name';
-          name.textContent = f.name;
-
-          const status = document.createElement('div');
-          status.className = 'fc-status ' + (f.inStock ? 'in' : 'preorder');
-          status.textContent = f.inStock ? 'В наличии' : 'Под заказ';
-
-          const sub = document.createElement('div');
-          sub.className = 'fc-sub';
-          sub.textContent = f.inStock
-            ? 'Обычно печатаем быстрее.'
-            : 'Сроки могут быть больше (уточним).';
-
-          const addBtn = document.createElement('button');
-          addBtn.type = 'button';
-          addBtn.className = 'fc-add';
-          addBtn.textContent = 'Выбрать';
-          addBtn.addEventListener('click', () => setSelectedFilament(f));
-
-          item.appendChild(img);
-          item.appendChild(name);
-          item.appendChild(status);
-          item.appendChild(sub);
-          item.appendChild(addBtn);
-          viewport.appendChild(item);
-
-          const dot = document.createElement('button');
-          dot.type = 'button';
-          dot.className = 'fc-dot' + (idx === 0 ? ' active' : '');
-          dot.setAttribute('aria-label', String(idx + 1));
-          dot.addEventListener('click', () => scrollToIndex(idx));
-          dotsWrap.appendChild(dot);
-        });
-
-        syncFilamentUI();
-        updateActiveDot();
-
-        prevBtn.addEventListener('click', () => scrollToIndex(currentIndex() - 1));
-        nextBtn.addEventListener('click', () => scrollToIndex(currentIndex() + 1));
-        viewport.addEventListener('scroll', () => window.requestAnimationFrame(updateActiveDot));
-      }
-
-      render();
-    }
-
-    initFilamentCarousel();
-
-    // submit (demo)
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      // validate all required fields by running through stages quickly
-      const t = getServiceType();
-      if (!t) { alert('Выберите услугу.'); return; }
-
-      // filament check if required
-      if ((t === 'print' || t === 'full') && !selectedFilamentId.value) {
-        alert('Выберите филамент.');
-        idx = Math.max(0, stageSequence().indexOf(3));
-        showStage();
-        return;
-      }
-
-      alert('Заказ сформирован (здесь подключим отправку на сервер/Telegram).');
-      form.reset();
-      setSelectedFilament(null);
-      if (filesList) filesList.innerHTML = '';
-      idx = 0;
-      showStage();
-    });
-
-    // init defaults
-    showStage();
-  })();
-})();
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--green:#00AE42;--card-width:900px}
+
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#e8ecef 0%,#d5e0e8 30%,#c3d4e0 60%,#b8c8d8 100%);
+  color:#333;line-height:1.6;overflow-x:hidden
+}
+html{scroll-behavior:smooth}
+
+/* ===== NAV (2 rows + icons right) ===== */
+.nav-glass{
+  position:fixed;
+  top:14px;left:50%;transform:translateX(-50%);
+  width:min(var(--card-width), 94vw);
+  background:rgba(255,255,255,.45);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:42px;
+  z-index:1000;
+  padding:12px 14px;
+  box-shadow:0 18px 55px rgba(0,0,0,.10);
+}
+.nav-inner{display:flex;align-items:stretch;gap:12px}
+.nav-left{flex:1;display:flex;flex-direction:column;gap:10px}
+
+.nav-row{
+  list-style:none;
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+  gap:10px;
+  margin:0;
+  padding:0;
+}
+.nav-glass nav a{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;
+  color:var(--green);
+  text-decoration:none;
+  padding:10px 12px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:.82rem;
+  border:2px solid transparent;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+  white-space:nowrap;
+}
+.nav-glass nav a:hover{
+  transform:translateY(-2px);
+  border-color:rgba(0,174,66,.35);
+  box-shadow:0 14px 26px rgba(0,174,66,.18);
+  background:rgba(255,255,255,1);
+}
+.nav-right{display:flex;align-items:center;gap:10px;padding-left:6px}
+.nav-ic{
+  width:46px !important;
+  height:46px !important;
+  padding:0 !important;
+  border-radius:999px !important;
+  background:rgba(0,174,66,.10) !important;
+  border:2px solid rgba(0,174,66,.20) !important;
+  box-shadow:0 10px 22px rgba(0,174,66,.14) !important;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-ic svg{width:22px;height:22px;fill:var(--green)}
+.nav-ic-exit{
+  background:rgba(220,38,38,.10) !important;
+  border-color:rgba(220,38,38,.18) !important;
+  box-shadow:0 10px 22px rgba(220,38,38,.12) !important;
+}
+.nav-ic-exit svg{fill:#b42318}
+
+/* mobile: collapse arrow */
+.nav-toggle{
+  display:none;
+  position:absolute;
+  right:12px;
+  bottom:-18px;
+  width:42px;height:42px;
+  border-radius:999px;
+  border:2px solid rgba(0,174,66,.20);
+  background:rgba(255,255,255,.92);
+  color:var(--green);
+  font-size:28px;
+  line-height:36px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(0,0,0,.10);
+}
+
+/* give space for nav */
+section{
+  min-height:70vh;
+  padding:190px 20px 40px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+
+/* ===== card/layout ===== */
+.card{
+  background:rgba(255,255,255,.92);
+  padding:2.5rem 2rem;border-radius:40px;
+  width:var(--card-width);max-width:90vw;
+  text-align:center;
+  box-shadow:0 15px 50px rgba(0,0,0,.12);
+  border:1px solid rgba(0,174,66,.25);
+  transition:all .4s ease
+}
+.card:hover{transform:translateY(-8px);box-shadow:0 25px 70px rgba(0,0,0,.18)}
+.card h1{
+  font-size:clamp(3rem,8vw,5rem);
+  background:linear-gradient(135deg,var(--green),#00D45E);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:1rem;font-weight:800
+}
+.card h2{font-size:clamp(1.8rem,5vw,3rem);color:var(--green);margin-bottom:1rem;font-weight:700}
+
+.content-grid,.process-container,.advantages-grid{margin:2rem auto;max-width:900px}
+.content-item,.process-step,.advantage-item{
+  background:rgba(255,255,255,.9);
+  border:3px solid transparent;
+  background-image:linear-gradient(rgba(255,255,255,.9),rgba(255,255,255,.9)),linear-gradient(90deg,var(--green),#00D45E);
+  border-radius:25px;padding:1.8rem;margin-bottom:1.5rem;
+  transition:all .3s ease;position:relative;overflow:hidden;
+  box-shadow:0 8px 25px rgba(0,0,0,.08);
+  background-clip:padding-box,border-box;text-align:left
+}
+.content-item:hover,.process-step:hover,.advantage-item:hover{transform:translateY(-5px);box-shadow:0 20px 45px rgba(0,174,66,.2)}
+
+/* buttons */
+.btn{
+  background:linear-gradient(135deg,var(--green),#00D45E);
+  color:#fff;padding:1rem 2.5rem;border-radius:50px;text-decoration:none;
+  font-weight:bold;font-size:1rem;display:inline-block;position:relative;overflow:hidden;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 8px 25px rgba(0,174,66,.4);
+  border:none;margin-top:1.5rem;cursor:pointer
+}
+.btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  transition:left .6s
+}
+.btn:hover::before{left:100%}
+.btn:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 15px 40px rgba(0,174,66,.6)}
+.btn-muted{
+  background:rgba(255,255,255,.9);
+  color:var(--green);
+  border:2px solid rgba(0,174,66,.25);
+  box-shadow:0 8px 25px rgba(0,0,0,.06)
+}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* forms */
+.form-wrap{text-align:left;max-width:720px;margin:2rem auto 0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-grid .full{grid-column:1/-1}
+.label{display:block;font-weight:700;color:#2b2b2b;margin:.2rem 0 .35rem;font-size:.95rem}
+input[type="text"],input[type="email"],input[type="number"],input[type="password"],textarea,select{
+  width:100%;padding:1rem 1.1rem;border:2px solid rgba(255,255,255,.5);
+  border-radius:15px;background:rgba(255,255,255,.95);
+  font-size:1rem;transition:all .3s ease;font-family:inherit
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(0,174,66,.2);
+  transform:scale(1.01)
+}
+.choice-group{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:.6rem}
+.choice{
+  display:flex;gap:.55rem;align-items:center;padding:.85rem .9rem;border-radius:16px;cursor:pointer;
+  user-select:none;border:2px solid rgba(0,174,66,.18);background:rgba(255,255,255,.8);
+  transition:all .25s ease
+}
+.choice:hover{border-color:rgba(0,174,66,.5);box-shadow:0 10px 22px rgba(0,0,0,.06);transform:translateY(-1px)}
+.choice input{accent-color:var(--green)}
+.choice b{color:var(--green);font-size:.95rem}
+.choice span{color:#4b4b4b;font-size:.9rem}
+.hint{margin-top:.35rem;color:#5a5a5a;font-size:.92rem;opacity:.95}
+.hidden{display:none !important}
+
+/* files */
+.file-box{border-radius:18px;border:2px dashed rgba(0,174,66,.35);background:rgba(255,255,255,.75);padding:1rem}
+.file-row{display:grid;grid-template-columns:1fr;gap:.6rem}
+.file-input{width:100%;padding:.9rem;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.95)}
+.files-list{font-size:.92rem;color:#4d4d4d;line-height:1.4;margin-top:.35rem}
+.files-list .item{padding:.25rem 0;border-bottom:1px solid rgba(0,0,0,.06)}
+
+/* messages */
+.msg-ok{background:rgba(0,174,66,.10);border:1px solid rgba(0,174,66,.25);padding:.75rem .9rem;border-radius:18px;margin-top:1rem}
+.msg-err{background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.25);padding:.75rem .9rem;border-radius:18px;margin-top:1rem;color:#5a0b0b}
+
+/* ===== wizard (stages) ===== */
+.wiz-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.wiz-step{font-weight:900;color:#1f1f1f}
+.wiz-nav{
+  display:flex;
+  gap:12px;
+  justify-content:space-between;
+  margin-top:16px;
+}
+.wiz-nav .btn{margin-top:0;flex:1}
+
+/* ===== filament carousel (from old) ===== */
+.filament-carousel{display:grid;grid-template-columns:44px 1fr 44px;gap:.8rem;align-items:center}
+.fc-btn{
+  width:44px;height:44px;border-radius:14px;
+  border:2px solid rgba(0,174,66,.22);
+  background:rgba(255,255,255,.92);
+  color:var(--green);
+  font-size:1.6rem;font-weight:900;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  transition:transform .15s ease, box-shadow .15s ease
+}
+.fc-btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(0,0,0,.12)}
+.fc-viewport{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(240px,1fr);
+  gap:1rem;
+  overflow-x:auto;
+  padding:.3rem .2rem;
+  scroll-snap-type:x mandatory;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none
+}
+.fc-viewport::-webkit-scrollbar{display:none}
+.fc-item{
+  scroll-snap-align:center;
+  border-radius:22px;
+  border:2px solid rgba(0,174,66,.18);
+  background:rgba(255,255,255,.92);
+  padding:1rem;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);
+  text-align:left
+}
+.fc-img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:18px;
+  border:1px solid rgba(0,0,0,.08);
+  background:rgba(0,0,0,.03)
+}
+.fc-name{margin-top:.85rem;font-weight:900;color:#1f1f1f;font-size:1.05rem}
+.fc-status{
+  display:inline-flex;align-items:center;gap:.45rem;
+  margin-top:.6rem;
+  padding:.35rem .65rem;
+  border-radius:999px;
+  font-weight:900;
+  font-size:.92rem;
+  border:1px solid rgba(0,0,0,.08)
+}
+.fc-status.in{color:#0b3b1e;background:rgba(0,174,66,.12);border-color:rgba(0,174,66,.25)}
+.fc-status.preorder{color:#5a0b0b;background:rgba(220,38,38,.12);border-color:rgba(220,38,38,.25)}
+.fc-sub{margin-top:.5rem;color:#555;font-size:.95rem;line-height:1.35}
+.fc-add{
+  width:100%;
+  margin-top:.9rem;
+  padding:.85rem 1.05rem;
+  border-radius:16px;
+  border:2px solid rgba(0,174,66,.22);
+  background:linear-gradient(135deg,var(--green),#00D45E);
+  color:#fff;
+  font-weight:900;
+  font-size:.95rem;
+  letter-spacing:.2px;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(0,174,66,.22);
+  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  font-family:inherit
+}
+.fc-add:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(0,174,66,.28)}
+.fc-add:active{transform:translateY(-1px);filter:brightness(.98)}
+.fc-add:disabled{cursor:not-allowed;opacity:.65;transform:none;box-shadow:none}
+.fc-item.selected{border-color:rgba(0,174,66,.60);box-shadow:0 18px 40px rgba(0,174,66,.16)}
+.fc-add.is-selected{
+  background:rgba(0,174,66,.10);
+  color:#0b3b1e;
+  border-color:rgba(0,174,66,.55);
+  box-shadow:none
+}
+.fc-dots{display:flex;gap:.45rem;justify-content:center;margin-top:.9rem;flex-wrap:wrap}
+.fc-dot{
+  width:10px;height:10px;border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(0,0,0,.10);
+  cursor:pointer
+}
+.fc-dot.active{background:rgba(0,174,66,.65);border-color:rgba(0,174,66,.7)}
+
+/* responsive */
+@media (max-width:1024px){
+  :root{--card-width:90vw}
+  .choice-group{grid-template-columns:1fr}
+}
+@media (max-width:768px){
+  :root{--card-width:100vw}
+  .nav-toggle{display:block;}
+  .nav-glass{top:8px;border-radius:32px;padding:12px}
+  .nav-inner{flex-direction:column;gap:10px}
+  .nav-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .nav-right{justify-content:center}
+  .nav-glass.is-collapsed .nav-left,
+  .nav-glass.is-collapsed .nav-right{display:none}
+  section{padding:220px 10px 30px !important}
+  .card{padding:2rem 1.5rem !important;border-radius:25px;max-width:95vw}
+  .form-grid{grid-template-columns:1fr}
+  .filament-carousel{grid-template-columns:38px 1fr 38px}
+  .fc-btn{width:38px;height:38px;border-radius:12px}
+  .fc-img{height:160px}
+  .fc-viewport{grid-auto-columns:100% !important;gap:.75rem !important;padding:.2rem 0 !important}
+  .fc-item{padding:.9rem !important}
+  .fc-img{height:210px !important;object-fit:contain !important;background:rgba(255,255,255,.95) !important}
+}
+@media (max-width:480px){
+  .filament-carousel{grid-template-columns:34px 1fr 34px !important}
+  .fc-btn{width:34px !important;height:34px !important;border-radius:11px !important;font-size:1.25rem !important}
+  .fc-img{height:190px !important}
+}
