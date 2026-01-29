@@ -8,65 +8,101 @@ body{
 }
 html{scroll-behavior:smooth}
 
-/* ===== NAV (stable) ===== */
+/* ===== NAV (left 2 rows + right icons) ===== */
 .nav-glass{
-  position:fixed;top:14px;left:50%;transform:translateX(-50%);
-  width:min(var(--card-width),92vw);
+  position:fixed;
+  top:14px;left:50%;transform:translateX(-50%);
+  width:min(var(--card-width), 94vw);
   background:rgba(255,255,255,.45);
-  backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
   border:1px solid rgba(255,255,255,.45);
   border-radius:42px;
   z-index:1000;
   padding:12px 14px;
-  box-shadow:0 18px 55px rgba(0,0,0,.10)
+  box-shadow:0 18px 55px rgba(0,0,0,.10);
 }
-.nav-glass nav{width:100%;display:flex;flex-direction:column;gap:10px}
-.nav-glass .nav-row{
-  list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px
+
+.nav-inner{
+  display:flex;
+  align-items:stretch;
+  gap:12px;
 }
+
+.nav-left{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.nav-row{
+  list-style:none;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:0;
+  padding:0;
+}
+
 .nav-glass nav a{
-  display:flex;align-items:center;justify-content:center;width:100%;
-  color:var(--green);text-decoration:none;
-  padding:10px 12px;border-radius:999px;
-  font-weight:800;font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;
+  color:var(--green);
+  text-decoration:none;
+  padding:10px 12px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:.82rem;
   border:2px solid transparent;
   background:rgba(255,255,255,.92);
   box-shadow:0 6px 18px rgba(0,0,0,.08);
   transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
-  white-space:nowrap
+  white-space:nowrap;
 }
+
 .nav-glass nav a:hover{
   transform:translateY(-2px);
   border-color:rgba(0,174,66,.35);
   box-shadow:0 14px 26px rgba(0,174,66,.18);
-  background:rgba(255,255,255,1)
+  background:rgba(255,255,255,1);
 }
 
-/* auth row: icons grouped right */
-.nav-glass .nav-auth{display:flex;justify-content:flex-end;gap:10px}
-.nav-glass .nav-auth li{list-style:none}
+.nav-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding-left:6px;
+}
 
 .nav-ic{
-  width:44px;height:44px;
+  width:46px !important;
+  height:46px !important;
   padding:0 !important;
   border-radius:999px !important;
   background:rgba(0,174,66,.10) !important;
   border:2px solid rgba(0,174,66,.20) !important;
-  box-shadow:0 10px 22px rgba(0,174,66,.14) !important
+  box-shadow:0 10px 22px rgba(0,174,66,.14) !important;
 }
+
 .nav-ic svg{width:22px;height:22px;fill:var(--green)}
+
 .nav-ic-exit{
   background:rgba(220,38,38,.10) !important;
   border-color:rgba(220,38,38,.18) !important;
-  box-shadow:0 10px 22px rgba(220,38,38,.12) !important
+  box-shadow:0 10px 22px rgba(220,38,38,.12) !important;
 }
 .nav-ic-exit svg{fill:#b42318}
 
-/* spacing below nav */
-section{min-height:70vh;padding:170px 20px 40px;display:flex;align-items:center;justify-content:center;position:relative}
+/* give space for nav */
+section{
+  min-height:70vh;
+  padding:190px 20px 40px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
 
-/* ===== card/layout ===== */
+/* ===== card/layout (оставил базу) ===== */
 .card{
   background:rgba(255,255,255,.92);
   padding:2.5rem 2rem;border-radius:40px;
@@ -144,7 +180,6 @@ input:focus,textarea:focus,select:focus{
 .choice b{color:var(--green);font-size:.95rem}
 .choice span{color:#4b4b4b;font-size:.9rem}
 .hint{margin-top:.35rem;color:#5a5a5a;font-size:.92rem;opacity:.95}
-
 .file-box{border-radius:18px;border:2px dashed rgba(0,174,66,.35);background:rgba(255,255,255,.75);padding:1rem}
 .file-row{display:grid;grid-template-columns:1fr;gap:.6rem}
 .file-input{width:100%;padding:.9rem;border-radius:14px;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.95)}
@@ -154,44 +189,14 @@ input:focus,textarea:focus,select:focus{
 .msg-ok{background:rgba(0,174,66,.10);border:1px solid rgba(0,174,66,.25);padding:.75rem .9rem;border-radius:18px;margin-top:1rem}
 .msg-err{background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.25);padding:.75rem .9rem;border-radius:18px;margin-top:1rem;color:#5a0b0b}
 
-/* profile order cards */
-.orders-wrap{margin-top:1.2rem;text-align:left}
-.order-card{
-  display:grid;grid-template-columns:14px 1fr auto;
-  gap:14px;align-items:start;
-  padding:16px;border-radius:22px;
-  background:rgba(255,255,255,.92);
-  border:2px solid rgba(0,174,66,.16);
-  box-shadow:0 10px 26px rgba(0,0,0,.07);
-  margin-bottom:12px
-}
-.order-dot{width:14px;height:14px;border-radius:999px;margin-top:4px;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.14)}
-.order-dot.queue{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.14)}
-.order-dot.printing{background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.18)}
-.order-dot.ready{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
-.order-dot.delivered{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}
-.order-dot.canceled{background:#9ca3af;box-shadow:0 0 0 4px rgba(156,163,175,.18)}
-
-.order-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.order-id{font-weight:900;color:#111}
-.order-status{
-  font-weight:900;color:#0b3b1e;padding:4px 10px;border-radius:999px;
-  background:rgba(0,174,66,.10);border:1px solid rgba(0,174,66,.25);font-size:.92rem
-}
-.order-meta{color:#667;font-size:.92rem}
-.order-body{color:#2b2b2b;font-size:1rem;line-height:1.5;margin-top:6px}
-.order-actions{text-align:right;color:#667;font-size:.92rem;white-space:nowrap}
-
-@media (max-width:1024px){
-  :root{--card-width:90vw}
-  .choice-group{grid-template-columns:repeat(2,1fr)}
-}
+/* mobile */
 @media (max-width:768px){
   :root{--card-width:100vw}
   .nav-glass{top:8px;border-radius:32px;padding:12px}
-  .nav-glass .nav-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .nav-glass .nav-auth{justify-content:center}
-  section{padding:210px 10px 30px !important}
+  .nav-inner{flex-direction:column;gap:10px}
+  .nav-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .nav-right{justify-content:center}
+  section{padding:220px 10px 30px !important}
   .card{padding:2rem 1.5rem !important;border-radius:25px;max-width:95vw}
   .form-grid{grid-template-columns:1fr}
   .choice-group{grid-template-columns:1fr}
