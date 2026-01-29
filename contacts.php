@@ -1,5 +1,11 @@
 <?php
 // contacts.php — Заказ
+
+// IMPORTANT:
+// Если твоя админка/ CMS умеет отдавать JSON филаментов — подставь его сюда,
+// чтобы фронт взял данные из админки.
+// Пример: $filamentsFromAdminJson = file_get_contents(__DIR__ . '/content/filament.json');
+$filamentsFromAdminJson = null; // <-- сюда подставишь JSON из админки (строкой) если нужно
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -7,12 +13,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3DOPE — Заказ</title>
-
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
 
-  <!-- NAV (без калькулятора и филамента) -->
+  <!-- NAV (без калькулятора/филамента) -->
   <div class="nav-glass">
     <div class="nav-inner">
       <div class="nav-left">
@@ -31,27 +36,24 @@
       </div>
 
       <div class="nav-right">
-        <!-- кнопка профиля (Netlify Identity) -->
-        <a class="nav-ic" href="login.php">
+        <a class="nav-ic" href="profile.php" title="Профиль" aria-label="Профиль">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.2 0-8 2.2-8 5v1h16v-1c0-2.8-3.8-5-8-5Z"/>
+            <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.2 0-7.5 2.2-7.5 5v1h15v-1c0-2.8-3.3-5-7.5-5Z"/>
           </svg>
         </a>
 
-        <!-- выход (показывается только если залогинен) -->
-        <a class="nav-ic nav-ic-exit" href="#" id="logoutBtn" aria-label="Выход" style="display:none">
+        <a class="nav-ic nav-ic-exit" href="logout.php" title="Выйти" aria-label="Выйти">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M10 17v-2h4v-2h-4V11l-3 3 3 3Zm9-12H11V3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-8v-2h8V5Z"/>
+            <path d="M10 17v-2h4v2h-4Zm0-4V11h7V9l4 3-4 3v-2h-7ZM4 4h10a2 2 0 0 1 2 2v2h-2V6H4v12h10v-2h2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>
           </svg>
         </a>
       </div>
     </div>
 
-    <!-- стрелочка сворачивания меню (моб) -->
+    <!-- стрелка сворачивания меню (моб) -->
     <button class="nav-toggle" id="navToggle" type="button" aria-expanded="true" aria-label="Свернуть меню">‹</button>
   </div>
 
-  <!-- PAGE -->
   <section>
     <div class="card">
       <h2>Оформить заказ</h2>
@@ -84,7 +86,7 @@
 
               <label class="choice">
                 <input type="radio" name="serviceType" value="modeling" required>
-                <div><b>Моделирование</b><br><span>По эскизам/чертежам/детали. Файл подготовим для печати.</span></div>
+                <div><b>Моделирование</b><br><span>По эскизам/чертежам/детали. Подготовим модель для печати.</span></div>
               </label>
 
               <label class="choice">
@@ -131,18 +133,15 @@
           <!-- STAGE 4 -->
           <div class="wiz-stage hidden" data-stage="4">
             <label class="label" for="clientContact">Контакт для связи</label>
-            <input id="clientContact" type="text" required
-                   placeholder="Telegram @username / WhatsApp / Email">
-            <div class="hint">По этому контакту сообщим, что модель/печать готова, и зададим вопросы, если они появятся.</div>
+            <input id="clientContact" type="text" required placeholder="Telegram @username / WhatsApp / Email">
+            <div class="hint">По этому контакту сообщим, что модель/печать готова, и уточним детали, если будут вопросы.</div>
 
             <div id="submitWrap" style="margin-top:10px">
               <button type="submit" class="btn" style="width:100%">Оформить заказ</button>
-              <div id="formMsg" class="msg-ok hidden">Заявка отправлена.</div>
-              <div id="formErr" class="msg-err hidden">Ошибка отправки.</div>
             </div>
           </div>
 
-          <!-- BOTTOM ARROWS -->
+          <!-- arrows -->
           <div class="wiz-nav">
             <button type="button" class="btn btn-muted" id="prevStage">‹ Назад</button>
             <button type="button" class="btn" id="nextStage">Вперёд ›</button>
@@ -153,10 +152,13 @@
     </div>
   </section>
 
-  <!-- Netlify Identity (как в твоём старом коде) -->
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <!-- 1) Сюда админка должна подставить JSON филаментов (если есть) -->
+  <script>
+    window.FILAMENTSFROMADMIN =
+      <?php echo $filamentsFromAdminJson ? $filamentsFromAdminJson : 'null'; ?>;
+  </script>
 
-  <!-- общий JS сайта -->
+  <!-- 2) JS -->
   <script src="assets/app.js"></script>
 </body>
 </html>
