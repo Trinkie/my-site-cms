@@ -1,32 +1,5 @@
 (function () {
-  // =========================
-  // NAV collapse (mobile)
-  // =========================
-  (function navCollapse() {
-    const nav = document.querySelector('.nav-glass');
-    const btn = document.getElementById('navToggle');
-    if (!nav || !btn) return;
-
-    const KEY = 'nav_collapsed';
-
-    function apply(collapsed) {
-      nav.classList.toggle('is-collapsed', collapsed);
-      btn.textContent = collapsed ? '›' : '‹';
-      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-
-    apply(localStorage.getItem(KEY) === '1');
-
-    btn.addEventListener('click', () => {
-      const next = !nav.classList.contains('is-collapsed');
-      localStorage.setItem(KEY, next ? '1' : '0');
-      apply(next);
-    });
-  })();
-
-  // =========================
-  // Filament carousel (for order step)
-  // =========================
+  // ===== helpers =====
   function parseItems(any) {
     try {
       const v = (typeof any === 'string') ? JSON.parse(any) : any;
@@ -44,9 +17,8 @@
     if (typeof v === 'number') return v !== 0;
     if (typeof v === 'string') {
       const s = v.trim().toLowerCase();
-      if (s.includes('out')) return false;
+      if (['0','false','no','n','off','preorder','unavailable','out'].includes(s)) return false;
       if (['1','true','yes','y','on','available','instock','in'].includes(s)) return true;
-      if (['0','false','no','n','off','preorder','unavailable'].includes(s)) return false;
     }
     return Boolean(v);
   }
@@ -63,13 +35,19 @@
     };
   }
 
-  async function loadFilamentsFromJsonFallback() {
+  async function loadFilaments() {
+    // 1) admin injected (если когда-то вернёшь)
+    const adminItems = parseItems(window.FILAMENTSFROMADMIN ?? window.FILAMENTS ?? window.filaments);
+    if (adminItems && adminItems.length) return adminItems.map(normalizeFilament);
+
+    // 2) file fallback (твой случай)
     const urls = [
-      'content/filament.json',
+      'filaments.json',
       'content/filaments.json',
-      'filament.json',
-      'filaments.json'
+      'content/filament.json',
+      'filament.json'
     ];
+
     for (const base of urls) {
       try {
         const url = new URL(base, window.location.href);
@@ -81,28 +59,28 @@
         if (items && items.length) return items.map(normalizeFilament);
       } catch (e) {}
     }
+
     return null;
   }
 
-  async function initFilamentCarousel() {
+  // ===== filament carousel =====
+  async function initFilamentCarouselOnce() {
     const viewport = document.getElementById('fcViewport');
     const dotsWrap = document.getElementById('fcDots');
     const prevBtn = document.getElementById('fcPrev');
     const nextBtn = document.getElementById('fcNext');
 
     if (!viewport || !dotsWrap || !prevBtn || !nextBtn) return;
-
-    // protect from double init
     if (viewport.dataset.inited === '1') return;
     viewport.dataset.inited = '1';
-
-    window.selectedFilament = window.selectedFilament ?? null;
 
     const selectedFilamentName = document.getElementById('selectedFilamentName');
     const selectedFilamentId = document.getElementById('selectedFilamentId');
     const selectedFilamentHint = document.getElementById('selectedFilamentHint');
 
-    function syncFilamentUI() {
+    window.selectedFilament = window.selectedFilament ?? null;
+
+    function syncUI() {
       const selId = window.selectedFilament?.id;
       document.querySelectorAll('.fc-item').forEach(card => {
         const fid = card.getAttribute('data-fid');
@@ -118,32 +96,25 @@
       });
     }
 
-    function setSelectedFilament(f) {
+    function setSelected(f) {
       window.selectedFilament = f ? { id: String(f.id), name: String(f.name) } : null;
       if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
       if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
       if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Филамент не выбран.';
-      syncFilamentUI();
+      syncUI();
     }
 
-    // 1) admin injected
-    const adminItems = parseItems(window.FILAMENTSFROMADMIN ?? window.FILAMENTS ?? window.filaments);
-    let filaments = (adminItems && adminItems.length) ? adminItems.map(normalizeFilament) : null;
-
-    // 2) fallback json
-    if (!filaments || filaments.length === 0) {
-      filaments = await loadFilamentsFromJsonFallback();
-    }
+    const filaments = await loadFilaments();
 
     if (!Array.isArray(filaments) || filaments.length === 0) {
-      viewport.innerHTML = '<div class="hint">Нет списка филаментов (админка не передала данные и нет JSON fallback).</div>';
+      viewport.innerHTML = '<div class="hint">Не найден filaments.json (или он пустой).</div>';
       dotsWrap.innerHTML = '';
       prevBtn.disabled = true;
       nextBtn.disabled = true;
       return;
     }
 
-    function getItemStepPx() {
+    function getStep() {
       const first = viewport.querySelector('.fc-item');
       if (!first) return viewport.clientWidth;
       const style = getComputedStyle(viewport);
@@ -151,91 +122,76 @@
       return first.getBoundingClientRect().width + gap;
     }
 
-    function scrollToIndex(index) {
-      const idx = Math.max(0, Math.min(filaments.length - 1, index));
-      const step = getItemStepPx();
-      viewport.scrollTo({ left: step * idx, behavior: 'smooth' });
+    function scrollToIndex(i) {
+      const idx = Math.max(0, Math.min(filaments.length - 1, i));
+      viewport.scrollTo({ left: getStep() * idx, behavior: 'smooth' });
     }
 
     function currentIndex() {
-      const step = getItemStepPx();
+      const step = getStep();
       if (!step) return 0;
       return Math.max(0, Math.min(filaments.length - 1, Math.round(viewport.scrollLeft / step)));
     }
 
-    function updateActiveDot() {
+    function updateDot() {
       const idx = currentIndex();
       dotsWrap.querySelectorAll('.fc-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
     }
 
-    function render() {
-      viewport.innerHTML = '';
-      dotsWrap.innerHTML = '';
+    // render
+    viewport.innerHTML = '';
+    dotsWrap.innerHTML = '';
 
-      filaments.forEach((f, idx) => {
-        const item = document.createElement('div');
-        item.className = 'fc-item';
-        item.dataset.index = String(idx);
-        item.setAttribute('data-fid', String(f.id));
+    filaments.forEach((f, idx) => {
+      const item = document.createElement('div');
+      item.className = 'fc-item';
+      item.setAttribute('data-fid', String(f.id));
 
-        const img = document.createElement('img');
-        img.className = 'fc-img';
-        img.alt = f.name;
-        img.src = f.image || 'images/filament/placeholder.jpg';
-        img.loading = 'lazy';
-        img.onerror = () => { img.style.opacity = '0.15'; };
+      const img = document.createElement('img');
+      img.className = 'fc-img';
+      img.alt = f.name;
+      img.src = f.image || 'images/filament/placeholder.jpg';
+      img.loading = 'lazy';
+      img.onerror = () => { img.style.opacity = '0.15'; };
 
-        const name = document.createElement('div');
-        name.className = 'fc-name';
-        name.textContent = f.name;
+      const name = document.createElement('div');
+      name.className = 'fc-name';
+      name.textContent = f.name;
 
-        const status = document.createElement('div');
-        status.className = 'fc-status ' + (f.inStock ? 'in' : 'preorder');
-        status.textContent = f.inStock ? 'В наличии' : 'Под заказ';
+      const status = document.createElement('div');
+      status.className = 'fc-status ' + (f.inStock ? 'in' : 'preorder');
+      status.textContent = f.inStock ? 'В наличии' : 'Под заказ';
 
-        const sub = document.createElement('div');
-        sub.className = 'fc-sub';
-        sub.textContent = f.inStock ? 'Обычно печатаем быстрее.' : 'Сроки могут быть больше (уточним).';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'fc-add';
+      btn.textContent = 'Выбрать';
+      btn.addEventListener('click', () => setSelected(f));
 
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'fc-add';
-        addBtn.textContent = 'Выбрать';
-        addBtn.addEventListener('click', () => setSelectedFilament(f));
+      item.appendChild(img);
+      item.appendChild(name);
+      item.appendChild(status);
+      item.appendChild(btn);
+      viewport.appendChild(item);
 
-        item.appendChild(img);
-        item.appendChild(name);
-        item.appendChild(status);
-        item.appendChild(sub);
-        item.appendChild(addBtn);
-        viewport.appendChild(item);
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'fc-dot' + (idx === 0 ? ' active' : '');
+      dot.addEventListener('click', () => scrollToIndex(idx));
+      dotsWrap.appendChild(dot);
+    });
 
-        const dot = document.createElement('button');
-        dot.type = 'button';
-        dot.className = 'fc-dot' + (idx === 0 ? ' active' : '');
-        dot.setAttribute('aria-label', String(idx + 1));
-        dot.addEventListener('click', () => scrollToIndex(idx));
-        dotsWrap.appendChild(dot);
-      });
+    prevBtn.addEventListener('click', () => scrollToIndex(currentIndex() - 1));
+    nextBtn.addEventListener('click', () => scrollToIndex(currentIndex() + 1));
+    viewport.addEventListener('scroll', () => window.requestAnimationFrame(updateDot));
 
-      prevBtn.addEventListener('click', () => scrollToIndex(currentIndex() - 1));
-      nextBtn.addEventListener('click', () => scrollToIndex(currentIndex() + 1));
-      viewport.addEventListener('scroll', () => window.requestAnimationFrame(updateActiveDot));
-
-      syncFilamentUI();
-      updateActiveDot();
-    }
-
-    render();
-
-    // small fix when step becomes visible (recalculate)
-    setTimeout(() => updateActiveDot(), 150);
+    syncUI();
+    updateDot();
+    setTimeout(updateDot, 150);
   }
 
-  // =========================
-  // Order wizard
-  // =========================
-  (function orderWizard() {
+  // ===== order wizard =====
+  (function initWizard() {
     const form = document.getElementById('orderWizard');
     if (!form) return;
 
@@ -257,7 +213,7 @@
       if (!target) return;
       target.innerHTML = '';
       if (!files || files.length === 0) return;
-      [...files].forEach((f) => {
+      [...files].forEach(f => {
         const div = document.createElement('div');
         div.className = 'item';
         div.textContent = `${f.name} (${Math.round(f.size / 1024)} KB)`;
@@ -283,50 +239,20 @@
       if (idx >= seq.length) idx = seq.length - 1;
 
       const cur = seq[idx];
-      const total = seq.length;
+      stages.forEach(s => s.classList.toggle('hidden', Number(s.dataset.stage) !== cur));
 
-      stages.forEach((s) => {
-        const n = Number(s.dataset.stage);
-        s.classList.toggle('hidden', n !== cur);
-      });
-
-      if (stageText) stageText.textContent = `Шаг ${idx + 1} из ${total}`;
-
+      if (stageText) stageText.textContent = `Шаг ${idx + 1} из ${seq.length}`;
       if (btnPrev) btnPrev.disabled = idx === 0;
-      if (btnNext) btnNext.style.display = (idx === total - 1) ? 'none' : '';
+      if (btnNext) btnNext.style.display = (idx === seq.length - 1) ? 'none' : '';
 
-      // init filament only when step 3 is реально открыт
+      // IMPORTANT: init only when step 3 is реально открыт
       if (cur === 3 && !filamentInited) {
         filamentInited = true;
-        initFilamentCarousel();
+        initFilamentCarouselOnce();
       }
 
       const submitWrap = document.getElementById('submitWrap');
       if (submitWrap) submitWrap.classList.toggle('hidden', cur !== 4);
-    }
-
-    function validateCurrentStage() {
-      const curStageNum = seq[idx];
-      const curStageEl = form.querySelector(`.wiz-stage[data-stage="${curStageNum}"]`);
-      if (!curStageEl) return true;
-
-      const els = Array.from(curStageEl.querySelectorAll('input, textarea, select'));
-      for (const el of els) {
-        if (el.required && !el.checkValidity()) {
-          el.reportValidity();
-          return false;
-        }
-      }
-
-      if (curStageNum === 3) {
-        const id = document.getElementById('selectedFilamentId')?.value;
-        if (!id) {
-          alert('Выберите филамент.');
-          return false;
-        }
-      }
-
-      return true;
     }
 
     function syncFilesByType() {
@@ -359,28 +285,43 @@
       showStage();
     }
 
-    form.querySelectorAll('input[name="serviceType"]').forEach((r) => {
+    form.querySelectorAll('input[name="serviceType"]').forEach(r => {
       r.addEventListener('change', syncFilesByType);
     });
 
-    if (filesInput) {
-      filesInput.addEventListener('change', () => setFilesList(filesList, filesInput.files));
+    if (filesInput) filesInput.addEventListener('change', () => setFilesList(filesList, filesInput.files));
+
+    function validateCurrentStage() {
+      const curStageNum = seq[idx];
+      const curStageEl = form.querySelector(`.wiz-stage[data-stage="${curStageNum}"]`);
+      if (!curStageEl) return true;
+
+      const els = Array.from(curStageEl.querySelectorAll('input, textarea, select'));
+      for (const el of els) {
+        if (el.required && !el.checkValidity()) {
+          el.reportValidity();
+          return false;
+        }
+      }
+
+      if (curStageNum === 3) {
+        const id = document.getElementById('selectedFilamentId')?.value;
+        if (!id) { alert('Выберите филамент.'); return false; }
+      }
+
+      return true;
     }
 
-    if (btnNext) {
-      btnNext.addEventListener('click', () => {
-        if (!validateCurrentStage()) return;
-        idx = Math.min(idx + 1, stageSequence().length - 1);
-        showStage();
-      });
-    }
+    if (btnNext) btnNext.addEventListener('click', () => {
+      if (!validateCurrentStage()) return;
+      idx = Math.min(idx + 1, stageSequence().length - 1);
+      showStage();
+    });
 
-    if (btnPrev) {
-      btnPrev.addEventListener('click', () => {
-        idx = Math.max(idx - 1, 0);
-        showStage();
-      });
-    }
+    if (btnPrev) btnPrev.addEventListener('click', () => {
+      idx = Math.max(idx - 1, 0);
+      showStage();
+    });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
