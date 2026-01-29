@@ -87,10 +87,10 @@ section{
 .card h2{font-size:clamp(1.8rem,5vw,3rem);color:var(--green);margin-bottom:1rem;font-weight:700}
 
 /* Small spacing under fixed navbar */
-body { padding-top: 105px; }
+body { padding-top: 50px; }
 
 @media (max-width: 768px){
-  body { padding-top: 135px; }
+  body { padding-top: 75px; }
 }
 
 
