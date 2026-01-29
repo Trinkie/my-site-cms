@@ -86,12 +86,13 @@ section{
 }
 .card h2{font-size:clamp(1.8rem,5vw,3rem);color:var(--green);margin-bottom:1rem;font-weight:700}
 
-/* Universal spacing under fixed navbar */
-body { padding-top: 170px; }
+/* Small spacing under fixed navbar */
+body { padding-top: 105px; }
 
 @media (max-width: 768px){
-  body { padding-top: 150px; }
+  body { padding-top: 135px; }
 }
+
 
 
 /* keep the rest of your blocks as-is (content-item, buttons, forms, etc.)
