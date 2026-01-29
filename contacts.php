@@ -32,7 +32,7 @@
 
       <div class="nav-right">
         <!-- кнопка профиля (Netlify Identity) -->
-        <a class="nav-ic" href="#" data-netlify-identity-button aria-label="Профиль">
+        <a class="nav-ic" href="login.php">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12Zm0 2c-4.2 0-8 2.2-8 5v1h16v-1c0-2.8-3.8-5-8-5Z"/>
           </svg>
