@@ -90,7 +90,7 @@ section{
 body { padding-top: 170px; }
 
 @media (max-width: 768px){
-  body { padding-top: 210px; }
+  body { padding-top: 150px; }
 }
 
 
