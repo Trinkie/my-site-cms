@@ -1,6 +1,31 @@
 (function () {
   // =========================
-  // Helpers
+  // NAV collapse (mobile)
+  // =========================
+  (function navCollapse() {
+    const nav = document.querySelector('.nav-glass');
+    const btn = document.getElementById('navToggle');
+    if (!nav || !btn) return;
+
+    const KEY = 'nav_collapsed';
+
+    function apply(collapsed) {
+      nav.classList.toggle('is-collapsed', collapsed);
+      btn.textContent = collapsed ? '›' : '‹';
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    }
+
+    apply(localStorage.getItem(KEY) === '1');
+
+    btn.addEventListener('click', () => {
+      const next = !nav.classList.contains('is-collapsed');
+      localStorage.setItem(KEY, next ? '1' : '0');
+      apply(next);
+    });
+  })();
+
+  // =========================
+  // Filament carousel (for order step)
   // =========================
   function parseItems(any) {
     try {
@@ -38,11 +63,6 @@
     };
   }
 
-  function getAdminFilamentsRaw() {
-    // “как делали”: админка должна положить список в одну из глобальных переменных
-    return (window.FILAMENTSFROMADMIN ?? window.FILAMENTS ?? window.filaments ?? null);
-  }
-
   async function loadFilamentsFromJsonFallback() {
     const urls = [
       'content/filament.json',
@@ -50,7 +70,6 @@
       'filament.json',
       'filaments.json'
     ];
-
     for (const base of urls) {
       try {
         const url = new URL(base, window.location.href);
@@ -65,10 +84,7 @@
     return null;
   }
 
-  // =========================
-  // Filament carousel (shared)
-  // =========================
-  async function initFilamentCarouselOnce(opts) {
+  async function initFilamentCarousel() {
     const viewport = document.getElementById('fcViewport');
     const dotsWrap = document.getElementById('fcDots');
     const prevBtn = document.getElementById('fcPrev');
@@ -76,16 +92,15 @@
 
     if (!viewport || !dotsWrap || !prevBtn || !nextBtn) return;
 
-    // avoid double init
+    // protect from double init
     if (viewport.dataset.inited === '1') return;
     viewport.dataset.inited = '1';
 
-    // selection outputs (optional)
+    window.selectedFilament = window.selectedFilament ?? null;
+
     const selectedFilamentName = document.getElementById('selectedFilamentName');
     const selectedFilamentId = document.getElementById('selectedFilamentId');
     const selectedFilamentHint = document.getElementById('selectedFilamentHint');
-
-    window.selectedFilament = window.selectedFilament ?? null;
 
     function syncFilamentUI() {
       const selId = window.selectedFilament?.id;
@@ -105,25 +120,23 @@
 
     function setSelectedFilament(f) {
       window.selectedFilament = f ? { id: String(f.id), name: String(f.name) } : null;
-
       if (selectedFilamentName) selectedFilamentName.value = f ? f.name : '';
       if (selectedFilamentId) selectedFilamentId.value = f ? f.id : '';
       if (selectedFilamentHint) selectedFilamentHint.textContent = f ? `Выбран: ${f.name}` : 'Филамент не выбран.';
-
       syncFilamentUI();
     }
 
-    // 1) try admin
-    const adminItems = parseItems(getAdminFilamentsRaw());
+    // 1) admin injected
+    const adminItems = parseItems(window.FILAMENTSFROMADMIN ?? window.FILAMENTS ?? window.filaments);
     let filaments = (adminItems && adminItems.length) ? adminItems.map(normalizeFilament) : null;
 
-    // 2) fallback to json
+    // 2) fallback json
     if (!filaments || filaments.length === 0) {
       filaments = await loadFilamentsFromJsonFallback();
     }
 
     if (!Array.isArray(filaments) || filaments.length === 0) {
-      viewport.innerHTML = '<div class="hint">Нет списка филаментов (не пришло из админки и нет JSON-файла).</div>';
+      viewport.innerHTML = '<div class="hint">Нет списка филаментов (админка не передала данные и нет JSON fallback).</div>';
       dotsWrap.innerHTML = '';
       prevBtn.disabled = true;
       nextBtn.disabled = true;
@@ -182,9 +195,7 @@
 
         const sub = document.createElement('div');
         sub.className = 'fc-sub';
-        sub.textContent = f.inStock
-          ? 'Обычно печатаем быстрее.'
-          : 'Сроки могут быть больше (уточним).';
+        sub.textContent = f.inStock ? 'Обычно печатаем быстрее.' : 'Сроки могут быть больше (уточним).';
 
         const addBtn = document.createElement('button');
         addBtn.type = 'button';
@@ -207,7 +218,6 @@
         dotsWrap.appendChild(dot);
       });
 
-      // buttons + scroll
       prevBtn.addEventListener('click', () => scrollToIndex(currentIndex() - 1));
       nextBtn.addEventListener('click', () => scrollToIndex(currentIndex() + 1));
       viewport.addEventListener('scroll', () => window.requestAnimationFrame(updateActiveDot));
@@ -218,52 +228,12 @@
 
     render();
 
-    // If carousel created while hidden, re-calc after a tick
-    setTimeout(() => {
-      updateActiveDot();
-    }, 150);
-
-    // expose setter for wizard validation if needed
-    window.__setSelectedFilament = setSelectedFilament;
+    // small fix when step becomes visible (recalculate)
+    setTimeout(() => updateActiveDot(), 150);
   }
 
   // =========================
-  // NAV collapse (mobile)
-  // =========================
-  (function navCollapse() {
-    const nav = document.querySelector('.nav-glass');
-    const btn = document.getElementById('navToggle');
-    if (!nav || !btn) return;
-
-    const KEY = 'nav_collapsed';
-
-    function apply(collapsed) {
-      nav.classList.toggle('is-collapsed', collapsed);
-      btn.textContent = collapsed ? '›' : '‹';
-      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-
-    apply(localStorage.getItem(KEY) === '1');
-
-    btn.addEventListener('click', () => {
-      const next = !nav.classList.contains('is-collapsed');
-      localStorage.setItem(KEY, next ? '1' : '0');
-      apply(next);
-    });
-  })();
-
-  // =========================
-  // Standalone filament page init
-  // =========================
-  (function standaloneFilamentPage() {
-    // Если на странице есть карусель — инициализируем сразу
-    if (document.getElementById('fcViewport') && !document.getElementById('orderWizard')) {
-      initFilamentCarouselOnce();
-    }
-  })();
-
-  // =========================
-  // ORDER WIZARD (contacts.php)
+  // Order wizard
   // =========================
   (function orderWizard() {
     const form = document.getElementById('orderWizard');
@@ -280,6 +250,8 @@
     const filesList = document.getElementById('filesList');
 
     let filamentInited = false;
+    let seq = [];
+    let idx = 0;
 
     function setFilesList(target, files) {
       if (!target) return;
@@ -300,14 +272,11 @@
 
     function stageSequence() {
       const t = getServiceType();
-      const seq = [1, 2];
-      if (t === 'print' || t === 'full') seq.push(3);
-      seq.push(4);
-      return seq;
+      const s = [1, 2];
+      if (t === 'print' || t === 'full') s.push(3);
+      s.push(4);
+      return s;
     }
-
-    let seq = stageSequence();
-    let idx = 0;
 
     function showStage() {
       seq = stageSequence();
@@ -326,10 +295,10 @@
       if (btnPrev) btnPrev.disabled = idx === 0;
       if (btnNext) btnNext.style.display = (idx === total - 1) ? 'none' : '';
 
-      // Lazy init filament carousel ONLY when step 3 is opened
+      // init filament only when step 3 is реально открыт
       if (cur === 3 && !filamentInited) {
         filamentInited = true;
-        initFilamentCarouselOnce();
+        initFilamentCarousel();
       }
 
       const submitWrap = document.getElementById('submitWrap');
@@ -341,7 +310,6 @@
       const curStageEl = form.querySelector(`.wiz-stage[data-stage="${curStageNum}"]`);
       if (!curStageEl) return true;
 
-      // required only in current stage
       const els = Array.from(curStageEl.querySelectorAll('input, textarea, select'));
       for (const el of els) {
         if (el.required && !el.checkValidity()) {
@@ -350,7 +318,6 @@
         }
       }
 
-      // If filament step is present: require selection
       if (curStageNum === 3) {
         const id = document.getElementById('selectedFilamentId')?.value;
         if (!id) {
@@ -397,9 +364,7 @@
     });
 
     if (filesInput) {
-      filesInput.addEventListener('change', () => {
-        setFilesList(filesList, filesInput.files);
-      });
+      filesInput.addEventListener('change', () => setFilesList(filesList, filesInput.files));
     }
 
     if (btnNext) {
@@ -419,33 +384,7 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-
-      const t = getServiceType();
-      if (!t) { alert('Выберите услугу.'); return; }
-
-      if ((t === 'print' || t === 'full') && !document.getElementById('selectedFilamentId')?.value) {
-        alert('Выберите филамент.');
-        // jump to filament stage
-        const pos = stageSequence().indexOf(3);
-        if (pos >= 0) idx = pos;
-        showStage();
-        return;
-      }
-
       alert('Заказ сформирован (дальше подключим отправку).');
-      form.reset();
-
-      // reset selection
-      if (typeof window.__setSelectedFilament === 'function') window.__setSelectedFilament(null);
-      if (filesList) filesList.innerHTML = '';
-
-      idx = 0;
-      filamentInited = false;
-      // allow init again after reset
-      const viewport = document.getElementById('fcViewport');
-      if (viewport) delete viewport.dataset.inited;
-
-      showStage();
     });
 
     showStage();
