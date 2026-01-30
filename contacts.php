@@ -25,12 +25,12 @@ $filamentsFromAdminJson = null; // <-- сюда подставишь JSON из �
           <ul class="nav-row">
             <li><a href="index.html">Главная</a></li>
             <li><a href="services.html">Услуги</a></li>
-            <li><a href="advantages.html">Преимущества</a></li>
-            <li><a href="faq.html">FAQ</a></li>
           </ul>
           <ul class="nav-row">
             <li><a href="process.html">Процесс</a></li>
             <li><a href="contacts.php">Заказ</a></li>
+            <li><a href="advantages.html">Преимущества</a></li>
+            <li><a href="faq.html">FAQ</a></li>
           </ul>
         </nav>
       </div>
