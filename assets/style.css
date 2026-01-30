@@ -322,3 +322,9 @@ input:focus,textarea:focus,select:focus{
   .fc-btn{width:34px !important;height:34px !important;border-radius:11px !important;font-size:1.25rem !important}
   .fc-img{height:190px !important}
 }
+.nav-glass nav ul{
+  row-gap: 10px; /* вертикальный интервал между рядами */
+  column-gap: 8px; /* если хочешь чуть больше по горизонтали */
+  align-items: center;
+}
+
