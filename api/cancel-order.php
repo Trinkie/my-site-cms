@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user'])) {
+if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Не авторизован']);
     exit;
@@ -21,7 +21,7 @@ if (!$order_id) {
 try {
     // Проверяем, что заказ принадлежит пользователю
     $st = $pdo->prepare('SELECT id FROM orders WHERE id = ? AND user_id = ?');
-    $st->execute([$order_id, (int)$_SESSION['user']['id']]);
+    $st->execute([$order_id, (int)$_SESSION['user_id']]);
     
     if (!$st->fetch()) {
         echo json_encode(['success' => false, 'error' => 'Заказ не найден']);
