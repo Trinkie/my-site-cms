@@ -7,8 +7,6 @@ $isAuth = function_exists('is_logged_in') && is_logged_in();
       <ul class="nav-row">
         <li><a href="index.html">Главная</a></li>
         <li><a href="services.html">Услуги</a></li>
-        <li><a href="calculator.html">Калькулятор</a></li>
-        <li><a href="filament.html">Филамент</a></li>
       </ul>
 
       <ul class="nav-row">
