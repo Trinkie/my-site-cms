@@ -2,8 +2,8 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // === CONFIG ===
-$BOT_TOKEN = 'PASTE_BOT_TOKEN_HERE';
-$CHAT_ID   = 'PASTE_CHAT_ID_HERE';
+$BOT_TOKEN = '8383618613:AAHj3dLZihRejU6cP2FwA9Luia3kw6OKOhM';
+$CHAT_ID   = '1309723376';
 
 // === INPUT ===
 $clientContact = trim($_POST['clientContact'] ?? '');
