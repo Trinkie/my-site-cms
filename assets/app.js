@@ -325,8 +325,36 @@
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      alert('Заказ сформирован (дальше подключим отправку).');
-    });
+      form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const serviceType = form.querySelector('input[name="serviceType"]:checked')?.value || '';
+  const data = new FormData();
+  data.append('serviceType', serviceType);
+  data.append('clientContact', document.getElementById('clientContact').value);
+  data.append('taskDesc', document.getElementById('taskDesc').value);
+
+  // если есть шаг с филаментом
+  data.append('filamentId', document.getElementById('selectedFilamentId')?.value || '');
+  data.append('filamentName', document.getElementById('selectedFilamentName')?.value || '');
+
+  // файлы (если надо)
+  const filesInput = document.getElementById('filesInput');
+  if (filesInput && filesInput.files && filesInput.files.length) {
+    [...filesInput.files].forEach((f, i) => data.append(`file_${i}`, f));
+  }
+
+  const r = await fetch('api/order.php', { method: 'POST', body: data });
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j.ok) {
+    alert('Не удалось отправить. Попробуйте ещё раз.');
+    return;
+  }
+
+  alert('Заявка отправлена! Мы скоро свяжемся.');
+  form.reset();
+});
 
     showStage();
   })();
