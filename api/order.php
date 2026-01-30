@@ -18,60 +18,77 @@ if ($clientContact === '' || $taskDesc === '' || $serviceType === '') {
   exit;
 }
 
-$ip = $_SERVER['REMOTE_ADDR'] ?? '';
-$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+function tgPost($method, $fields, $token) {
+  $url = "https://api.telegram.org/bot{$token}/{$method}";
+  $ch = curl_init($url);
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $fields,
+    CURLOPT_TIMEOUT => 30,
+  ]);
+  $res = curl_exec($ch);
+  $err = curl_error($ch);
+  $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+  return [$code, $res, $err];
+}
 
+// 1) send text message
 $lines = [];
-$lines[] = "🧾 Новый заказ 3DOPE";
+$lines[] = "Новый заказ 3DOPE";
 $lines[] = "Услуга: {$serviceType}";
 if ($serviceType === 'print' || $serviceType === 'full') {
   $lines[] = "Филамент: " . ($filamentName ?: $filamentId ?: '(не выбран)');
 }
 $lines[] = "Контакт: {$clientContact}";
 $lines[] = "Описание: " . mb_strimwidth($taskDesc, 0, 1200, '…', 'UTF-8');
-$lines[] = "IP: {$ip}";
-$lines[] = "UA: " . mb_strimwidth($ua, 0, 300, '…', 'UTF-8');
 
 $text = implode("\n", $lines);
 
-// === SEND TELEGRAM ===
-$url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
-$payload = [
+list($code1, $res1, $err1) = tgPost('sendMessage', [
   'chat_id' => $CHAT_ID,
   'text' => $text,
   'disable_web_page_preview' => true
-];
+], $BOT_TOKEN);
 
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_POST => true,
-  CURLOPT_POSTFIELDS => http_build_query($payload),
-  CURLOPT_TIMEOUT => 10
-]);
-$res = curl_exec($ch);
-$err = curl_error($ch);
-$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-if ($res === false || $code >= 400) {
+if ($code1 >= 400 || $res1 === false) {
   http_response_code(500);
-  echo json_encode(['ok' => false, 'error' => 'Telegram send failed', 'details' => $err ?: $res]);
+  echo json_encode(['ok' => false, 'error' => 'Telegram sendMessage failed', 'details' => $err1 ?: $res1]);
   exit;
 }
 
-// === OPTIONAL: save to file ===
-@mkdir(__DIR__ . '/../orders', 0775, true);
-$order = [
-  'ts' => date('c'),
-  'serviceType' => $serviceType,
-  'clientContact' => $clientContact,
-  'taskDesc' => $taskDesc,
-  'filamentId' => $filamentId,
-  'filamentName' => $filamentName,
-  'ip' => $ip,
-  'ua' => $ua
-];
-file_put_contents(__DIR__ . '/../orders/' . time() . '.json', json_encode($order, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+// 2) send uploaded files (if any)
+$sentFiles = [];
 
-echo json_encode(['ok' => true]);
+if (!empty($_FILES)) {
+  @mkdir(__DIR__ . '/../uploads', 0775, true);
+
+  foreach ($_FILES as $key => $f) {
+    if (!isset($f['error']) || $f['error'] !== UPLOAD_ERR_OK) continue;
+    if (!is_uploaded_file($f['tmp_name'])) continue;
+
+    $safeName = preg_replace('/[^a-zA-Z0-9._-]+/u', '_', $f['name']);
+    $dst = __DIR__ . '/../uploads/' . time() . '_' . $safeName;
+
+    if (!move_uploaded_file($f['tmp_name'], $dst)) continue;
+
+    // sendDocument
+    $cFile = new CURLFile($dst, $f['type'] ?: 'application/octet-stream', $safeName);
+
+    list($code2, $res2, $err2) = tgPost('sendDocument', [
+      'chat_id' => $CHAT_ID,
+      'document' => $cFile,
+      'caption' => "Файл: {$safeName}"
+    ], $BOT_TOKEN);
+
+    // удаляем локальную копию
+    @unlink($dst);
+
+    if ($code2 < 400 && $res2 !== false) {
+      $sentFiles[] = $safeName;
+    }
+  }
+}
+
+echo json_encode(['ok' => true, 'sentFiles' => $sentFiles]);
