@@ -323,12 +323,11 @@
       showStage();
     });
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      form.addEventListener('submit', async (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const serviceType = form.querySelector('input[name="serviceType"]:checked')?.value || '';
+
   const data = new FormData();
   data.append('serviceType', serviceType);
   data.append('clientContact', document.getElementById('clientContact').value);
@@ -344,17 +343,23 @@
     [...filesInput.files].forEach((f, i) => data.append(`file_${i}`, f));
   }
 
-  const r = await fetch('api/order.php', { method: 'POST', body: data });
-  const j = await r.json().catch(() => ({}));
+  try {
+    const r = await fetch('api/order.php', { method: 'POST', body: data });
+    const j = await r.json().catch(() => ({}));
 
-  if (!r.ok || !j.ok) {
-    alert('Не удалось отправить. Попробуйте ещё раз.');
-    return;
+    if (!r.ok || !j.ok) {
+      alert('Не удалось отправить. Попробуйте ещё раз.');
+      return;
+    }
+
+    alert('Заявка отправлена! Мы скоро свяжемся.');
+    form.reset();
+    // при желании: idx = 0; showStage();
+  } catch (err) {
+    alert('Ошибка сети. Попробуйте ещё раз.');
   }
-
-  alert('Заявка отправлена! Мы скоро свяжемся.');
-  form.reset();
 });
+
 
     showStage();
   })();
